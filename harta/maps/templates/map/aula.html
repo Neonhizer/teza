@@ -1,0 +1,16 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Harta cu Imagini</title>
+</head>
+<body>
+    <h1>Imagini pe Hartă</h1>
+
+    {% for imagine in imagini %}
+        <div>
+            <img src="{{ imagine.imagine.url }}" alt="{{ imagine.nume }}">
+        </div>
+    {% endfor %}
+</body>
+</html>

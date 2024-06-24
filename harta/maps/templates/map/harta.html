@@ -486,7 +486,7 @@
 </div>
 
 </div>
-<!-- Div pentru chenarul/modalul de evenimente -->
+
 <div id="events-modal" class="modal">
   <div id="events-content"></div>
   <div id="images-content" style="display: none;"></div>
@@ -495,13 +495,13 @@
   <button id="primaria-btn" onclick="showEventsForLocation('Primaria')">Primaria</button>
 </div>
 
-<!-- Div pentru modalul de filme -->
+
 <div id="movies-modal" class="modal">
   <div id="movies-content"></div>
   <button onclick="closeMoviesModal()" class="close-btn">Închide</button>
 </div>
 
-<!-- Div pentru modalul de teatru -->
+
 <div id="theater-modal" class="modal">
   <div id="theater-content"></div>
   <button onclick="closeTheaterModal()" class="close-btn">Închide</button>
@@ -653,7 +653,7 @@
           var marker = L.marker(coordinates).addTo(map);
       
           marker.bindPopup(popupText).on('popupopen', function () {
-              // La deschiderea popup-ului - imaginile pentru centrul civic
+              // When opening the popup - the images for the civic center
               fetch('/get_images_centru_civic/')
                   .then(response => response.json())
                   .then(data => {
@@ -670,7 +670,7 @@
       
               currentPopup = e.target;
       
-              // La clic pe marker, afiseaza sau ascunde containerul de imagini
+              // When you click on the marker, it shows or hides the image container
               if (imageContainer.style.display === "block") {
                   imageContainer.style.display = "none";
               } else {
@@ -895,21 +895,21 @@ function displayEvents(events) {
     const eventElement = document.createElement('div');
     eventElement.classList.add('event-card');
 
-    if (event.showtimes) { // Verifică dacă este un film
+    if (event.showtimes) { // Check if it's a movie
       eventElement.innerHTML = `
         <h3>${event.title}</h3>
         <p>${event.description}</p>
         <p>Ore de difuzare: ${event.showtimes.join(', ')}</p>
         <a href="${event.movie_link}" target="_blank" class="event-link">Vizualizare trailer</a>
       `;
-    } else if (event.author) { // Verifică dacă este un eveniment de teatru
+    } else if (event.author) { // Check if it's a theater event
       eventElement.innerHTML = `
         <h3>${event.title}</h3>
         <p>Autor: ${event.author}</p>
         <p>Data: ${event.date_time}</p>
         <a href="${event.title_link}" target="_blank" class="event-link">Vizualizare detalii</a>
       `;
-    } else { // Altfel, este un alt tip de eveniment
+    } else { 
       const imageElement = document.createElement('img');
       imageElement.src = event.image_url;
       imageElement.alt = event.title;
@@ -955,7 +955,7 @@ function displayEvents(events) {
 
 
 
-// Functie pentru a inchide modalul
+// Function to close the modal
 function closeEventsModal() {
   document.getElementById('events-modal').style.display = 'none';
 }
@@ -964,8 +964,8 @@ function closeEventsModal() {
    
     function closeEventsModal() {
       document.getElementById('events-modal').style.display = 'none';
-      document.getElementById('events-content').style.display = 'block'; // Arată din nou evenimentele când se închide modalul
-      document.getElementById('images-content').style.display = 'none'; // Ascunde imaginile
+      document.getElementById('events-content').style.display = 'block'; // Show events again when the modal closes
+      document.getElementById('images-content').style.display = 'none'; // Hide images
     }
 
 
@@ -984,7 +984,7 @@ function closeEventsModal() {
 
 
 function showEventsForLocation(location) {
-  // Șterge conținutul de imagini, dacă există
+  // Delete the image content, if any
   document.getElementById('images-content').innerHTML = '';
   
   let url = '';
@@ -997,16 +997,15 @@ function showEventsForLocation(location) {
   fetch(url)
     .then(response => response.json())
     .then(data => {
-      displayEvents(data.events); // Afișează evenimentele
-      // Ascunde și afișează div-urile corespunzător
+      displayEvents(data.events); // Show events
+     
       document.getElementById('images-content').style.display = 'none';
       document.getElementById('events-content').style.display = 'block';
     })
     .catch(error => console.error('Error:', error));
 }
 
-
-// Adaugă ascultători de evenimente pentru Aula și Primaria pentru a încărca evenimentele
+// Add event listeners for the aula and primaria to load the events
 document.getElementById('aula-btn').addEventListener('click', function() { showEventsForLocation('Aula'); });
 document.getElementById('primaria-btn').addEventListener('click', function() { showEventsForLocation('Primaria'); });
 
@@ -1017,7 +1016,7 @@ create2DMap();
 
 
 function showCinemaCityLocation(coords) {
-  // Creăm un icon personalizat pentru marker
+  // create a custom marker icon
   var customIcon = L.icon({
     iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-violet.png',
     iconSize: [25, 41],
@@ -1026,7 +1025,7 @@ function showCinemaCityLocation(coords) {
     shadowSize: [41, 41]
   });
 
-  // Adăugăm markerul pe hartă cu iconul personalizat
+  // add the marker on the map with the custom icon
   var civicMarker = L.marker(coords, { icon: customIcon }).addTo(map);
   map.setView(coords, 18);
   civicMarker.bindPopup("Cinema City").openPopup();
@@ -1152,7 +1151,7 @@ setInterval(() => {
   currentMonth = currentDate.getMonth();
   currentYear = currentDate.getFullYear();
   generateCalendar(currentMonth, currentYear, currentDate);
-}, 24 * 60 * 60 * 1000); // 24 ore în milisecunde
+}, 24 * 60 * 60 * 1000); // 24 hours in milliseconds
 
 
 

@@ -34,37 +34,7 @@ import re
 from bson import json_util
 from datetime import datetime, timedelta
 
-# client = MongoClient("mongodb://localhost:27017/")
-# db = client["maps"]
-# colectie = db["CV"]
-# #din baza de date trebuie citite, sa nu fie statice, in binar sa fie
-# cale_imagini = [
-#     "C:\\Users\\rusuv\\Desktop\\teza\\harta\\maps\\centru_vechi\\primaria.png",
-#      "C:\\Users\\rusuv\\Desktop\\teza\\harta\\maps\\centru_vechi\\teatru.png"
-# ]
 
-# nume_imagini = ["Primaria","Teatru Dramatic"]
-
-# def adauga_imagini_in_db():
-#     for cale_imagine, nume_imagine in zip(cale_imagini, nume_imagini):
-#         # Verifică dacă imaginea există deja în colecție
-#         if colectie.find_one({"nume": nume_imagine}):
-#             continue
-
-#         with open(cale_imagine, "rb") as image_file:
-#             # Decodifică imaginea și comprimă-o
-#             imagine = Image.open(BytesIO(image_file.read()))
-#             buffer = BytesIO()
-#             imagine = imagine.convert('RGB')
-#             imagine.save(buffer, format="JPEG")
-#             content = buffer.getvalue()
-
-#         colectie.insert_one({"nume": nume_imagine, "imagine": content})
-
-# # Adaugă imaginile doar dacă nu există deja
-# adauga_imagini_in_db()
-
-# client.close()
 
 def get_images_centru_civic(request):
     client = MongoClient("mongodb://localhost:27017/")
@@ -106,198 +76,6 @@ def streetview(request):
 
 
 
-
-
-# def aula(request: HttpRequest):
-#     url = 'https://www.unitbv.ro/stiri-si-evenimente.html'
-#     base_url = 'https://www.unitbv.ro'
-#     client = MongoClient("mongodb://localhost:27017/")
-#     db = client["maps"]
-#     news_collection = db["aula"]
-
-#     search_query = request.GET.get('q', '')
-
-#     if search_query:
-#         filtered_articles = news_collection.find({
-#             '$or': [
-#                 {'title': {'$regex': search_query, '$options': 'i'}},
-#                 {'description': {'$regex': search_query, '$options': 'i'}}
-#             ]
-#         }).sort("published_date", -1)
-#     else:
-#         filtered_articles = news_collection.find().sort("published_date", 1)
-
-#     response = requests.get(url)
-#     if response.status_code == 200:
-#         soup = BeautifulSoup(response.text, 'html.parser')
-#         articles = soup.find_all('article', class_='item')
-            
-#         for article in articles:
-#             title_element = article.find('h5', class_='item_title')
-#             description_element = article.find('div', class_='item_introtext')
-#             image_element = article.find('img')
-#             if title_element and description_element and image_element:
-#                 title = title_element.text.strip()
-#                 description = description_element.text.strip()
-#                 image_url = urljoin(base_url, image_element['src'])
-#                 article_url = urljoin(base_url, article.find('a')['href'])
-#                 existing_article = news_collection.find_one({'article_url': article_url})
-#                 if image_url and not existing_article:
-#                     published_date = datetime.now().strftime("%Y-%m-%d")
-#                     article_data = {
-#                         'title': title,
-#                         'article_url': article_url,
-#                         'image_url': image_url,
-#                         'description': description,
-#                         'published_date': published_date,
-#                     }
-#                     try:
-#                         news_collection.insert_one(article_data)
-#                     except Exception as e:
-#                         print(f"Eroare la inserarea datelor: {str(e)}")
-
-#     articole_list = list(filtered_articles)
-#     client.close()
-
-#     context = {'articole': articole_list, 'search_query': search_query}
-#     return render(request, 'map/aula.html', context)
-
-
-
-
-
-
-# def aula(request: HttpRequest):
-#     url = 'https://www.unitbv.ro/stiri-si-evenimente.html'
-#     base_url = 'https://www.unitbv.ro'
-#     client = MongoClient("mongodb://localhost:27017/")
-#     db = client["maps"]
-#     news_collection = db["aulas"]
-
-#     search_query = request.GET.get('q', '')
-
-#     if search_query:
-#         filtered_articles = news_collection.find({
-#             '$or': [
-#                 {'title': {'$regex': search_query, '$options': 'i'}},
-#                 {'description': {'$regex': search_query, '$options': 'i'}}
-#             ]
-#         }).sort("published_date", -1)
-#     else:
-#         filtered_articles = news_collection.find().sort("published_date", -1)
-
-#     response = requests.get(url)
-#     if response.status_code == 200:
-#         soup = BeautifulSoup(response.text, 'html.parser')
-#         articles = soup.find_all('article', class_='item')
-            
-#         for article in articles:
-#             title_element = article.find('h5', class_='item_title')
-#             description_element = article.find('div', class_='item_introtext')
-#             image_element = article.find('img')
-#             if title_element and description_element and image_element:
-#                 title = title_element.text.strip()
-#                 description = description_element.text.strip()
-#                 image_url = urljoin(base_url, image_element['src'])
-#                 article_url = urljoin(base_url, article.find('a')['href'])
-#                 existing_article = news_collection.find_one({'article_url': article_url})
-#                 if image_url and not existing_article:
-#                     published_date = datetime.now().strftime("%Y-%m-%d")
-#                     published_date = datetime.strptime(published_date, "%Y-%m-%d")
-#                     article_data = {
-#                         'title': title,
-#                         'article_url': article_url,
-#                         'image_url': image_url,
-#                         'description': description,
-#                         'published_date': published_date,
-#                     }
-#                     try:
-#                         news_collection.insert_one(article_data)
-#                     except Exception as e:
-#                         print(f"Eroare la inserarea datelor: {str(e)}")
-
-#     articole_list = list(filtered_articles)
-
-#     current_date = datetime.now().date()
-#     new_article_threshold = current_date - timedelta(days=7)  # Consideră articolele mai noi de 7 zile ca fiind noi
-
-#     for articol in articole_list:
-#         articol['is_new'] = articol['published_date'].date() > new_article_threshold
-
-#     client.close()
-
-#     context = {'articole': articole_list, 'search_query': search_query}
-#     return render(request, 'map/aula.html', context)
-
-
-
-
-
-
-
-# def aula(request: HttpRequest):
-#     url = 'https://www.unitbv.ro/stiri-si-evenimente.html'
-#     base_url = 'https://www.unitbv.ro'
-#     client = MongoClient("mongodb://localhost:27017/")
-#     db = client["maps"]
-#     news_collection = db["aulas"] 
-#     search_query = request.GET.get('q', '')
-
-#     if search_query:
-#         filtered_articles = news_collection.find({
-#             '$or': [
-#                 {'title': {'$regex': search_query, '$options': 'i'}},
-#                 {'description': {'$regex': search_query, '$options': 'i'}}
-#             ]
-#         }).sort("published_date", -1)
-#     else:
-#         filtered_articles = news_collection.find().sort("published_date", -1)
-
-#     response = requests.get(url)
-#     if response.status_code == 200:
-#         soup = BeautifulSoup(response.text, 'html.parser')
-#         articles = soup.find_all('article', class_='item')
-            
-#         for article in articles:
-#             title_element = article.find('h5', class_='item_title')
-#             description_element = article.find('div', class_='item_introtext')
-#             image_element = article.find('img')
-#             if title_element and description_element and image_element:
-#                 title = title_element.text.strip()
-#                 description = description_element.text.strip()
-#                 image_url = urljoin(base_url, image_element['src'])
-#                 article_url = urljoin(base_url, article.find('a')['href'])
-#                 existing_article = news_collection.find_one({'article_url': article_url})
-#                 if image_url and not existing_article:
-#                     published_date = datetime.now().strftime("%Y-%m-%d")
-#                     published_date = datetime.strptime(published_date, "%Y-%m-%d")
-#                     article_data = {
-#                         'title': title,
-#                         'article_url': article_url,
-#                         'image_url': image_url,
-#                         'description': description,
-#                         'published_date': published_date,
-#                     }
-#                     try:
-#                         news_collection.insert_one(article_data)
-#                     except Exception as e:
-#                         print(f"Eroare la inserarea datelor: {str(e)}")
-
-#     articole_list = list(filtered_articles)
-
-#     date_str = request.GET.get('date')
-#     if date_str:
-#         try:
-#             selected_date = datetime.strptime(date_str, "%Y-%m-%d").date()
-#         except ValueError:
-#             selected_date = None
-#     else:
-#         selected_date = None
-
-#     context = {'articole': articole_list, 'search_query': search_query, 'selected_date': selected_date}
-#     client.close()
-
-#     return render(request, 'map/aula.html', context)
 
 
 
@@ -405,45 +183,6 @@ def events_by_date_aula(request):
 
 
 
-
-# @require_http_methods(["GET"])
-# def data_aula(request):
-#     client = MongoClient("mongodb://localhost:27017/")
-#     db = client["maps"]
-#     news_collection = db["aulas"]
-
-#     date_str = request.GET.get('date')
-#     if date_str:
-#         try:
-#             selected_date = datetime.strptime(date_str, "%Y-%m-%d").date()
-#             selected_datetime = datetime(selected_date.year, selected_date.month, selected_date.day)
-#         except ValueError:
-#             selected_datetime = None
-#     else:
-#         selected_datetime = None
-
-#     if selected_datetime:
-#         events = list(news_collection.find({'published_date': selected_datetime}))
-        
-#         formatted_events = [
-#             {
-#                 'title': event['title'],
-#                 'article_url': event['article_url'],
-#                 'description':event['description'],
-#                 'image_url': event['image_url'],
-#                 'published_date': event['published_date'].strftime("%Y-%m-%d")
-#             }
-#             for event in events
-#         ]
-#     else:
-#         formatted_events = []
-
-#     client.close()
-#     return JsonResponse({'events': formatted_events})
-
-
-
-
 @require_http_methods(["GET"])
 def data_aula(request):
     client = MongoClient("mongodb://localhost:27017/")
@@ -527,7 +266,7 @@ def primaria(request: HttpRequest):
                 article_url = title_element.select_one('a')['href'] if title_element.select_one('a') else None
 
                 if article_url:
-                    # Extragem data folosind funcția extract_date_primaria
+                   
                     date = extract_date_primaria(description)
 
                     if article_url not in existing_article_urls:
@@ -540,7 +279,7 @@ def primaria(request: HttpRequest):
                         })
                         existing_article_urls.add(article_url)
                     else:
-                        # Actualizăm data articolului existent
+                        # updating the date of the existing article
                         news_collection.update_one(
                             {'article_url': article_url},
                             {'$set': {'date': date}}
@@ -561,14 +300,14 @@ def get_all_events(request):
     primaria_collection = db.primaria  
 
     events = events_collection.find({})
-    primaria_events = primaria_collection.find({})  #  evenimentele din colectia primaria
+    primaria_events = primaria_collection.find({}) 
 
     events_list = [{"title": event["title"], "description": event.get("description", ""), "article_url": event.get("article_url", "#"), "image_url": event.get ("image_url","")} for event in events]
     primaria_events_list = [{"title": event["title"], "description": event.get("description", ""), "article_url": event.get("article_url", "#"),"image_url": event.get ("image_url","")} for event in primaria_events]
 
     client.close()
 
-    # Combina listele de evenimente din ambele colecii
+    # combine the event lists from both collections
     combined_events_list = events_list + primaria_events_list
 
     return JsonResponse({'events': combined_events_list})
@@ -584,7 +323,7 @@ def cinema_city(request):
     db = client["maps"]
     movies_collection = db["cinemacity"]
 
-    # Configurarea opțiunilor pentru Chrome
+    # configure options for Chrome
     chrome_options = Options()
     chrome_options.add_argument("--headless")
     chrome_options.add_argument("--no-sandbox")
@@ -633,11 +372,11 @@ def cinema_city(request):
                 poster_link = None
 
             print(poster_link)
-            # Extrage orele de difuzare
+            
             showtime_elements = movie_container.find_all('a', class_='btn btn-primary btn-lg')
             showtimes = [showtime_element.text.strip() for showtime_element in showtime_elements]
 
-            # Adaugăm link-ul imaginii posterului în datele filmului
+           
             movie_data.append({
                 'title': title,
                 'description': description,
@@ -719,160 +458,6 @@ def events_filme(request):
 
 
 
-# def teatru(request):
-#     url = 'https://teatrulsicaalexandrescu.ro/program-5/'
-
-#     try:
-#         response = requests.get(url)
-#         response.raise_for_status() 
-#     except requests.exceptions.RequestException as e:
-#         logging.error(f"Error fetching webpage: {e}")
-#         return render(request, 'map/teatru.html', {'error': 'Eroare la încărcarea paginii web.'})
-
-#     soup = BeautifulSoup(response.content, 'html.parser')
-
-#     # Selectăm toate div-urile care conțin informațiile despre spectacole
-#     show_sections = soup.select('div#gridrow-prg') 
-
-#     shows_data = []
-
-#     for section in show_sections:
-#         # Nu mai excludem niciun div, deoarece toate conțin informații relevante
-        
-#         # Extragem data și ora
-#         date_time_element = section.select_one('section.av_textblock_section div p')
-#         date_time = date_time_element.get_text(separator=" ").strip() if date_time_element else "Data/ora indisponibilă"
-        
-#         # Extragem titlul și link-ul
-#         title_link_element = section.select_one('section.av_textblock_section div p a')
-#         title = title_link_element.text.strip() if title_link_element else "Titlu indisponibil"
-#         title_link = title_link_element['href'] if title_link_element and title_link_element.has_attr('href') else None
-        
-#         # Extragem autorul
-#         author_element = section.select_one('section.av_textblock_section div p:nth-of-type(2)')
-#         author = author_element.text.strip() if author_element else "Autor indisponibil"
-
-#         # Extragem imaginea
-#         image_element = section.select_one('div.avia-image-container-inner img')
-#         image_url = image_element['src'] if image_element else "Imagine indisponibilă"
-
-#         show_data = {
-#             'title': title,
-#             'title_link': title_link,
-#             'author': author,
-#             'image_url': image_url,
-#             'date_time': date_time,
-#         }
-#         shows_data.append(show_data)
-#     try:
-#         client = MongoClient("mongodb://localhost:27017/")
-#         db = client["maps"]
-#         shows_collection = db["teatru"]
-
-#         # Ștergem toate datele existente din colecție
-#         shows_collection.delete_many({})
-#         # Insert data into MongoDB
-#         shows_collection.insert_many(shows_data)  
-
-#     except Exception as e:
-#         logging.error(f"Error connecting to or updating MongoDB: {e}")
-#         return render(request, 'map/teatru.html', {'error': 'Eroare la baza de date.'})
-#     finally:
-#         client.close()
-
-#     # Pass the list of all shows data to the template
-#     return render(request, 'map/teatru.html', {'shows':shows_data})
-
-
-
-# @csrf_exempt
-# def chat_with_mistral(request):
-#     load_dotenv()
-#     if request.method == 'POST':
-#         user_input = request.POST.get('message', '')
-#         if not user_input:
-#             return render(request, 'map/harta.html', {'error': 'No input provided'})
-
-#         api_key = os.getenv("MISTRAL_API_KEY")
-#         if not api_key:
-#             return render(request, 'map/harta.html', {'error': 'Mistral API key not found'})
-
-#         client = MistralClient(api_key=api_key)
-#         model = "mistral-large-latest"
-
-#         # Conectare la MongoDB
-#         mongo_client = MongoClient("mongodb://localhost:27017/")
-#         db = mongo_client.maps
-#         collections = {
-#             "cinemacity": db.cinemacity,
-#             "Events": db.aulas,
-#             "primaria": db.primaria,
-#             "teatru": db.teatru
-#         }
-
-#         # Verifică diferite tipuri de întrebări
-#         if re.search(r'(aula|universitate|facultate|stiri|unitbv)', user_input.lower()):
-#             aula_events = list(collections["Events"].find({}))
-#             if aula_events:
-#                 response_content = "Iată evenimentele de la Aula Universitatii și UNITBV:\n" + \
-#                                    "\n".join([f"Titlu: {event['title']}, Descriere: {event['description']}"
-#                                               for event in aula_events])
-#             else:
-#                 response_content = "Nu am găsit evenimente la Aula Universitatii sau UNITBV în baza de date."
-
-#         elif re.search(r'(cinema|film)', user_input.lower()):
-#             cinema_movies = list(collections["cinemacity"].find())
-#             if cinema_movies:
-#                 response_content = "Iată filmele disponibile la Cinema City:\n" + \
-#                                    "\n".join([f"Titlu: {movie['title']}, Descriere: {movie['description']}"
-#                                               for movie in cinema_movies])
-#             else:
-#                 response_content = "Nu am găsit informații despre filme la Cinema City în baza de date."
-
-#         elif re.search(r'(primarie|cultura|brasov)', user_input.lower()):
-#             primarie_events = list(collections["primaria"].find())
-#             if primarie_events:
-#                 primarie_response = "Iată câteva evenimente culturale de la Primăria Brașov:\n" + \
-#                                     "\n".join([f"Titlu: {event['title']}, Descriere: {event['description']}"
-#                                                for event in primarie_events])
-#             else:
-#                 primarie_response = "Nu am gasit evenimente culturale de la Primăria Brașov în baza de date"
-#             mongo_client.close()
-#             return render(request, 'map/harta.html', {'response': primarie_response})
-
-#         elif re.search(r'(teatru|piese|spectacole)', user_input.lower()):
-#             teatru_events = list(collections["teatru"].find({}))
-#             if teatru_events:
-#                 teatru_response = "Iată câteva piese de teatru disponibile:\n" + \
-#                                   "\n".join([f"Titlu: {event['title']}, Autor: {event['author']}, Data: {event['date_time']}, Link: {event['title_link']}"
-#                                              for event in teatru_events])
-#             else:
-#                 teatru_response = "Nu am găsit piese de teatru în baza de date."
-#             mongo_client.close()
-#             return render(request, 'map/harta.html', {'response': teatru_response})
-
-#         else:
-#             try:
-#                 chat_response = client.chat(
-#                     model=model,
-#                     messages=[ChatMessage(role="user", content=user_input)]
-#                 )
-#                 response_content = chat_response.choices[0].message.content
-
-
-#                 chat_history = ChatHistory(user_message=user_input, ai_response=response_content)
-#                 chat_history.save()
-
-#             except Exception as e:
-#                 mongo_client.close()
-#                 return render(request, 'map/harta.html', {'error': str(e)})
-                
-
-#         mongo_client.close()
-#         chat_history = ChatHistory.objects.all().order_by('-created_at')
-#         return render(request, 'map/harta.html', {'response': response_content, 'user_input': user_input})
-        
-#     return render(request, 'map/harta.html')
 @csrf_exempt
 def chat_with_mistral(request):
     load_dotenv()
@@ -1081,21 +666,6 @@ def chat_with_mistral(request):
                 else:
                     response_content = "Nu am găsit evenimente sau anunțuri în acest moment."
 
-        # Scenariul 2: Afișarea detaliilor unui anumit eveniment     
-        # elif re.search(r'detalii despre', user_input.lower()):
-        #         event_match = re.search(r'detalii despre\s+(.+)', user_input.lower())
-        #         if event_match:
-        #             event_title = event_match.group(1)
-        #             event = collections["aulas"].find_one({"title": {"$regex": event_title, "$options": "i"}})
-        #             if event:
-        #                 response_content = f"Detalii despre evenimentul '{event['title']}':\n"
-        #                 response_content += f"- Descriere: {event['description']}\n"
-                        
-        #                 response_content += f"- Link: {event['article_url']}"
-        #             else:
-        #                 response_content = f"Nu am găsit detalii despre evenimentul '{event_title}'."
-        #         else:
-        #             response_content = "Te rog specifică un eveniment pentru a obține detalii (de exemplu: 'detalii despre Numele Evenimentului')."
 
 
         # Scenariul 2: Afișarea detaliilor unui anumit eveniment     
@@ -1116,94 +686,10 @@ def chat_with_mistral(request):
                 response_content = "Te rog specifică un eveniment pentru a obține detalii (de exemplu: 'detalii despre Numele Evenimentului')."
 
 
-        # elif re.search(r'perioada', user_input.lower()):
-        #         # Scenariul 4: Căutarea evenimentelor dintr-o anumită perioadă
-        #         period_match = re.search(r'(evenimente|anunțuri)\s+în\s+(\w+)', user_input.lower())
-        #         if period_match:
-        #             period = period_match.group(2)
-        #             events = list(collections["aulas"].find({"published_date": {"$regex": period, "$options": "i"}}))
-        #             if events:
-        #                 event_list = "\n".join([f"- {event['title']} ({event['published_date']})" for event in events])
-        #                 response_content = f"Evenimentele și anunțurile din perioada '{period}' sunt:\n{event_list}"
-        #             else:
-        #                 response_content = f"Nu am găsit evenimente sau anunțuri în perioada '{period}'."
-        #         else:
-        #             response_content = "Te rog specifică o perioadă pentru a căuta evenimente (de exemplu: 'evenimente în iunie')."
-
-        # elif re.search(r'link', user_input.lower()):
-        #         # Scenariul 3: Afișarea link-ului unui eveniment
-        #         event_match = re.search(r'link\s+pentru\s+(.+)', user_input.lower())
-        #         if event_match:
-        #             event_title = event_match.group(1)
-        #             event = collections["aulas"].find_one({"$or": [
-        #                 {"title": {"$regex": event_title, "$options": "i"}},
-        #                 {"description": {"$regex": event_title, "$options": "i"}}
-        #             ]})
-        #             if event:
-        #                 response_content = f"Link-ul pentru evenimentul '{event['title']}' este: {event['article_url']}"
-        #             else:
-        #                 response_content = f"Nu am găsit link-ul pentru evenimentul '{event_title}'."
-        #         else:
-        #             response_content = "Te rog specifică un eveniment pentru a obține link-ul (de exemplu: 'link pentru Numele Evenimentului')."
-           
-        # elif re.search(r'imagine', user_input.lower()):
-        #         # Scenariul 4: Afișarea imaginii unui eveniment  
-        #         event_match = re.search(r'imagine\s+pentru\s+(.+)', user_input.lower())
-        #         if event_match:
-        #             event_title = event_match.group(1)
-        #             event = collections["aulas"].find_one({"title": {"$regex": event_title, "$options": "i"}})
-        #             if event:
-        #                 response_content = f"Imaginea pentru evenimentul '{event['title']}' poate fi găsită aici: {event['image_url']}"
-        #             else:
-        #                 response_content = f"Nu am găsit imaginea pentru evenimentul '{event_title}'."
-        #         else:
-        #             response_content = "Te rog specifică un eveniment pentru a obține imaginea (de exemplu: 'imagine pentru Numele Evenimentului')."
-            
-        # elif re.search(r'unde\s+(se desfășoară|are loc)', user_input.lower()):
-        #         # Scenariul 5: Întrebări despre locul de desfășurare al evenimentelor
-        #         event_match = re.search(r'unde\s+(se desfășoară|are loc)\s+(.+)', user_input.lower())
-        #         if event_match:
-        #             event_title = event_match.group(2)
-        #             event = collections["aulas"].find_one({"title": {"$regex": event_title, "$options": "i"}})
-        #             if event:
-        #                 location = re.search(r'Aula\s+[^,.]+', event['description'])
-        #                 if location:
-        #                     response_content = f"Evenimentul '{event['title']}' se desfășoară la {location.group()}."
-        #                 else:
-        #                     response_content = f"Nu am găsit informații exacte despre locul de desfășurare al evenimentului '{event['title']}', dar acesta are loc probabil la una dintre aulele Universității Transilvania."
-        #             else:
-        #                 response_content = f"Nu am găsit evenimentul '{event_title}'."
-        #         else:
-        #             response_content = "Te rog specifică un eveniment pentru a afla locul de desfășurare (de exemplu: 'unde are loc Numele Evenimentului')."
-
-            
-
-        # elif re.search(r'(gratuite|intrare liberă|fără taxă)', user_input.lower()):
-        #         # Scenariul 6: Afișarea evenimentelor cu intrare liberă
-        #         events = list(collections["aulas"].find({"description": {"$regex": "intrare liberă|gratuit|fără taxă", "$options": "i"}}))
-        #         if events:
-        #             event_list = "\n".join([f"- {event['title']} ({event['published_date']})" for event in events])
-        #             response_content = f"Evenimentele cu intrare liberă sunt:\n{event_list}"
-        #         else:
-        #             response_content = "Nu am găsit evenimente cu intrare liberă."
-
-        # else:
-        #         # Scenariul 7: Căutarea unui eveniment după titlu sau cuvinte cheie
-        #         events = list(collections["aulas"].find({"$or": [{"title": {"$regex": user_input, "$options": "i"}}, {"description": {"$regex": user_input, "$options": "i"}}]}))
-        #         if events:
-        #             event_list = "\n".join([f"- {event['title']} ({event['published_date']})" for event in events])
-        #             response_content = f"Evenimentele și anunțurile găsite pentru '{user_input}' sunt:\n{event_list}"
-        #         else:
-        #             response_content = f"Nu am găsit evenimente sau anunțuri pentru '{user_input}'."
 
 
 
-
-
-
-
-
-        # Integrează API-ul Mistral pentru întrebări care nu sunt acoperite de baza de date
+        # Integrates the Mistral API for queries not covered by the database
         else:
             try:
                 chat_response = client.chat(
@@ -1234,142 +720,6 @@ def clear_chat_history(request):
     return redirect('chat_with_mistral')
 
 
-
-
-    
-
-
-
-# def extract_date(date_time):
-#     try:
-#         date_part = date_time.split(',')[1]  # Împărțim șirul după virgulă și luăm a doua parte
-#         date_part = date_part.split(' ')[1]  # Împărțim din nou șirul după spațiu și luăm a doua parte
-#         return date_part.strip()  # Eliminăm spațiile de la început și sfârșit
-#     except IndexError:
-#         return "Indisponibil"
-
-
-# def teatru(request):
-#     url = 'https://teatrulsicaalexandrescu.ro/program-5/'
-
-#     try:
-#         response = requests.get(url)
-#         response.raise_for_status() 
-#     except requests.exceptions.RequestException as e:
-#         logging.error(f"Error fetching webpage: {e}")
-#         return render(request, 'map/teatru.html', {'error': 'Eroare la încărcarea paginii web.'})
-
-#     soup = BeautifulSoup(response.content, 'html.parser')
-
-#     # Selectăm toate div-urile care conțin informațiile despre spectacole
-#     show_sections = soup.select('div#gridrow-prg') 
-
-#     shows_data = []
-
-#     for section in show_sections:
-#         # Nu mai excludem niciun div, deoarece toate conțin informații relevante
-        
-#         # Extragem data și ora
-#         date_time_element = section.select_one('section.av_textblock_section div p')
-#         date_time = date_time_element.get_text(separator=" ").strip() if date_time_element else "Data/ora indisponibilă"
-        
-#         # Extragem titlul și link-ul
-#         title_link_element = section.select_one('section.av_textblock_section div p a')
-#         title = title_link_element.text.strip() if title_link_element else "Titlu indisponibil"
-#         title_link = title_link_element['href'] if title_link_element and title_link_element.has_attr('href') else None
-        
-#         # Extragem autorul
-#         author_element = section.select_one('section.av_textblock_section div p:nth-of-type(2)')
-#         author = author_element.text.strip() if author_element else "Autor indisponibil"
-
-#         # Extragem imaginea
-#         image_element = section.select_one('div.avia-image-container-inner img')
-#         image_url = image_element['src'] if image_element else "Imagine indisponibilă"
-
-#         show_data = {
-#             'title': title,
-#             'title_link': title_link,
-#             'author': author,
-#             'image_url': image_url,
-#             'date_time': date_time,
-#         }
-#         shows_data.append(show_data)
-
-#         # Actualizăm colecția "teatru" cu câmpul "datanoua"
-#         datanoua = extract_date(date_time)
-#         show_data['datanoua'] = datanoua
-
-#     try:
-#         client = MongoClient("mongodb://localhost:27017/")
-#         db = client["maps"]
-#         shows_collection = db["teatru99"]
-
-#         # Ștergem toate datele existente din colecție
-#         shows_collection.delete_many({})
-#         # Insert data into MongoDB
-#         shows_collection.insert_many(shows_data)  
-
-#     except Exception as e:
-#         logging.error(f"Error connecting to or updating MongoDB: {e}")
-#         return render(request, 'map/teatru.html', {'error': 'Eroare la baza de date.'})
-#     finally:
-#         client.close()
-
-#     # Pass the list of all shows data to the template
-#     return render(request, 'map/teatru.html', {'shows':shows_data})
-
-
-
-
-
-# @require_http_methods(["GET"])
-# def data_teatru(request):
-#     client = MongoClient("mongodb://localhost:27017/")
-#     db = client["maps"]
-#     news_collection = db["teatru99"]
-
-#     date_str = request.GET.get('date')
-#     if date_str:
-#         # Try parsing the date in both "d.mm.yyyy" and "dd.mm.yyyy" formats
-#         try:
-#             selected_date = datetime.strptime(date_str, "%d.%m.%Y").strftime("%d.%m.%Y")
-#             print(f"Selected date: {selected_date}")
-#         except ValueError:
-#             try:
-#                 selected_date = datetime.strptime(date_str, "%d-%m-%Y").strftime("%d.%m.%Y")
-#                 print(f"Selected date: {selected_date}")
-#             except ValueError:
-#                 selected_date = None
-#                 print("Invalid date format")
-#     else:
-#         selected_date = None
-#         print("No date provided")
-
-#     events = []
-#     if selected_date:
-#         # Query the collection with both "d.mm.yyyy" and "dd.mm.yyyy" formats
-#         events = list(news_collection.find({'datanoua': {'$in': [selected_date, selected_date.lstrip('0')]}}))
-#         print(f"Found {len(events)} events")
-#         print(events)
-#         print(selected_date)
-        
-#         formatted_events = [
-#             {
-#                 'title': event['title'],
-#                 'title_link': event['title_link'],
-#                 'author': event['author'],
-#                 'image_url': event['image_url'],
-#                 'date_time': event['date_time'],
-#                 'datanoua': event['datanoua']
-#             }
-#             for event in events
-#         ]
-#     else:
-#         formatted_events = []
-#         print("No events found")
-
-#     client.close()
-#     return JsonResponse({'events': formatted_events})
 
 
 
@@ -1426,9 +776,9 @@ def events_by_date_teatru(request):
 
 def extract_date(date_time):
     try:
-        date_part = date_time.split(',')[1]  # Împărțim șirul după virgulă și luăm a doua parte
-        date_part = date_part.split(' ')[1]  # Împărțim din nou șirul după spațiu și luăm a doua parte
-        return date_part.strip()  # Eliminăm spațiile de la început și sfârșit
+        date_part = date_time.split(',')[1]  #split the string after the comma and take the second part
+        date_part = date_part.split(' ')[1]  #split the string by space again and take the second part
+        return date_part.strip()  # remove leading and trailing spaces
     except IndexError:
         return "Indisponibil"
 
@@ -1453,28 +803,28 @@ def teatru(request):
 
     soup = BeautifulSoup(response.content, 'html.parser')
 
-    # Selectăm toate div-urile care conțin informațiile despre spectacole
+    # select all the divs that contain the shows information
     show_sections = soup.select('div#gridrow-prg')
 
     shows_data = []
 
     for section in show_sections:
-        # Nu mai excludem niciun div, deoarece toate conțin informații relevante
         
-        # Extragem data și ora
+        
+        
         date_time_element = section.select_one('section.av_textblock_section div p')
         date_time = date_time_element.get_text(separator=" ").strip() if date_time_element else "Data/ora indisponibilă"
         
-        # Extragem titlul și link-ul
+        # extract the title and link
         title_link_element = section.select_one('section.av_textblock_section div p a')
         title = title_link_element.text.strip() if title_link_element else "Titlu indisponibil"
         title_link = title_link_element['href'] if title_link_element and title_link_element.has_attr('href') else None
         
-        # Extragem autorul
+        # extract the author
         author_element = section.select_one('section.av_textblock_section div p:nth-of-type(2)')
         author = author_element.text.strip() if author_element else "Autor indisponibil"
 
-        # Extragem imaginea
+        # extract the image
         image_element = section.select_one('div.avia-image-container-inner img')
         image_url = image_element['src'] if image_element else "Imagine indisponibilă"
 
@@ -1487,7 +837,7 @@ def teatru(request):
         }
         shows_data.append(show_data)
 
-        # Actualizăm colecția "teatru" cu câmpul "datanoua"
+        # Update the "teatru" collection with the "datanoua" field
         datanoua = extract_date(date_time)
         formatted_date = format_date(datanoua)
         show_data['datanoua'] = formatted_date
@@ -1497,7 +847,7 @@ def teatru(request):
         db = client["maps"]
         shows_collection = db["teatru999"]
 
-        # Ștergem toate datele existente din colecție
+        # delete all existing data from the collection
         shows_collection.delete_many({})
         # Insert data into MongoDB
         shows_collection.insert_many(shows_data)  

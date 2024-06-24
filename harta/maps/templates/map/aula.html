@@ -1,16 +1,482 @@
-
-<!DOCTYPE html>
-<html>
+{% comment %} <!DOCTYPE html>
+<html lang="ro">
 <head>
-    <title>Harta cu Imagini</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Articole Organizate</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 0 auto;
+            max-width: 1200px;
+        }
+        .articol {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            padding: 20px;
+            transition: transform 0.2s ease-in-out;
+        }
+        .articol:hover {
+            transform: translateY(-5px);
+        }
+        h2 {
+            color: #2a2a72;
+            font-size: 20px;
+        }
+        p {
+            font-size: 14px;
+            line-height: 1.4;
+            color: #666;
+        }
+        img {
+            width: 100%;
+            height: auto;
+            border-radius: 4px;
+        }
+        a {
+            text-decoration: none;
+            color: white;
+            background-color: #2a2a72;
+            padding: 8px 16px;
+            border-radius: 4px;
+            display: inline-block;
+            margin-top: 10px;
+        }
+        a:hover {
+            background-color: #1e1e6c;
+        }
+        @media (max-width: 600px) {
+            .grid-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+
+
+        .search-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        #search-input {
+            padding: 10px;
+            width: 300px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        button[type="submit"] {
+            padding: 10px 20px;
+            background-color: #333;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            margin-left: 10px;
+            cursor: pointer;
+        }
+        #search-results {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .home-button {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #2a2a72;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 16px;
+            margin-bottom: 20px;
+            transition: background-color 0.3s ease;
+        }
+        
+        .home-button:hover {
+            background-color: #1e1e6c;
+        }
+        
+        .home-button i {
+            margin-right: 5px;
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
 </head>
 <body>
-    <h1>Imagini pe Hartă</h1>
-
-    {% for imagine in imagini %}
-        <div>
-            <img src="{{ imagine.imagine.url }}" alt="{{ imagine.nume }}">
-        </div>
-    {% endfor %}
+    <a href="http://127.0.0.1:8000/harta" class="home-button">
+        <i class="fas fa-home"></i> Acasă
+    </a>
+    
+    <div class="search-container">
+        <form method="GET">
+            <input type="text" name="q" id="search-input" placeholder="Caută articole..." value="{{ search_query }}">
+            <button type="submit">Caută</button>
+        </form>
+    </div>
+    
+    <div class="grid-container">
+        {% for articol in articole %}
+            <div class="articol">
+                <h2>{{ articol.title }}</h2>
+                <p>{{ articol.description }}</p>
+                {% if articol.image_url %}
+                    <img src="{{ articol.image_url }}" alt="Imagine articol">
+                {% endif %}
+                <a href="{{ articol.article_url }}" target="_blank">Citește mai mult</a>
+            </div>
+        {% empty %}
+            <p>Nu s-au găsit articole.</p>
+        {% endfor %}
+    </div>
 </body>
-</html>
+</html> {% endcomment %}
+{% comment %} 
+
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Articole Organizate</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 0 auto;
+            max-width: 1200px;
+        }
+        .articol {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            padding: 20px;
+            transition: transform 0.2s ease-in-out;
+        }
+        .articol:hover {
+            transform: translateY(-5px);
+        }
+        h2 {
+            color: #2a2a72;
+            font-size: 20px;
+        }
+        p {
+            font-size: 14px;
+            line-height: 1.4;
+            color: #666;
+        }
+        img {
+            width: 100%;
+            height: auto;
+            border-radius: 4px;
+        }
+        a {
+            text-decoration: none;
+            color: white;
+            background-color: #2a2a72;
+            padding: 8px 16px;
+            border-radius: 4px;
+            display: inline-block;
+            margin-top: 10px;
+        }
+        a:hover {
+            background-color: #1e1e6c;
+        }
+        @media (max-width: 600px) {
+            .grid-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+
+
+        .search-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        #search-input {
+            padding: 10px;
+            width: 300px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        button[type="submit"] {
+            padding: 10px 20px;
+            background-color: #333;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            margin-left: 10px;
+            cursor: pointer;
+        }
+        #search-results {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .home-button {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #2a2a72;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 16px;
+            margin-bottom: 20px;
+            transition: background-color 0.3s ease;
+        }
+        
+        .home-button:hover {
+            background-color: #1e1e6c;
+        }
+        
+        .home-button i {
+            margin-right: 5px;
+        }
+        .articol .published-date {
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 5px;
+        }
+        
+        .articol .new-badge {
+            background-color: #4CAF50;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-left: 10px;
+        }
+        
+        .articol.new-article {
+            background-color: #f0fff0;
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+</head>
+<body>
+    
+
+    <a href="http://127.0.0.1:8000/harta" class="home-button">
+        <i class="fas fa-home"></i> Acasă
+    </a>
+    
+    <div class="search-container">
+        <form method="GET">
+            <input type="text" name="q" id="search-input" placeholder="Caută articole..." value="{{ search_query }}">
+            <button type="submit">Caută</button>
+        </form>
+    </div>
+    
+       
+    <div class="grid-container">
+        {% for articol in articole %}
+            <div class="articol {% if articol.is_new %}new-article{% endif %}">
+                <h2>{{ articol.title }}</h2>
+                <p class="published-date">Publicat la: {{ articol.published_date|date:"d M Y" }}</p>
+                {% if articol.is_new %}
+                    <span class="new-badge">Nou</span>
+                {% endif %}
+                <p>{{ articol.description }}</p>
+                {% if articol.image_url %}
+                    <img src="{{ articol.image_url }}" alt="Imagine articol">
+                {% endif %}
+                <a href="{{ articol.article_url }}" target="_blank">Citește mai mult</a>
+            </div>
+        {% empty %}
+            <p>Nu s-au găsit articole.</p>
+        {% endfor %}
+    </div>
+</body>
+</html> 
+ {% endcomment %}
+ <!DOCTYPE html>
+ <html lang="ro">
+ <head>
+     <meta charset="UTF-8">
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+     <title>Articole Organizate</title>
+     <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 0 auto;
+            max-width: 1200px;
+        }
+        .articol {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            padding: 20px;
+            transition: transform 0.2s ease-in-out;
+        }
+        .articol:hover {
+            transform: translateY(-5px);
+        }
+        h2 {
+            color: #2a2a72;
+            font-size: 20px;
+        }
+        p {
+            font-size: 14px;
+            line-height: 1.4;
+            color: #666;
+        }
+        img {
+            width: 100%;
+            height: auto;
+            border-radius: 4px;
+        }
+        a {
+            text-decoration: none;
+            color: white;
+            background-color: #2a2a72;
+            padding: 8px 16px;
+            border-radius: 4px;
+            display: inline-block;
+            margin-top: 10px;
+        }
+        a:hover {
+            background-color: #1e1e6c;
+        }
+        @media (max-width: 600px) {
+            .grid-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+
+
+        .search-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        #search-input {
+            padding: 10px;
+            width: 300px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        button[type="submit"] {
+            padding: 10px 20px;
+            background-color: #333;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            margin-left: 10px;
+            cursor: pointer;
+        }
+        #search-results {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .home-button {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #2a2a72;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 16px;
+            margin-bottom: 20px;
+            transition: background-color 0.3s ease;
+        }
+        
+        .home-button:hover {
+            background-color: #1e1e6c;
+        }
+        
+        .home-button i {
+            margin-right: 5px;
+        }
+        .articol .published-date {
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 5px;
+        }
+        
+        .articol .new-badge {
+            background-color: #4CAF50;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-left: 10px;
+        }
+        
+        .articol.new-article {
+            background-color: #f0fff0;
+        }
+     </style>
+     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+ </head>
+ <body>
+     <a href="http://127.0.0.1:8000/harta" class="home-button">
+         <i class="fas fa-home"></i> Acasă
+     </a>
+     
+     <div class="search-container">
+         <form method="GET">
+             <input type="text" name="q" id="search-input" placeholder="Caută articole..." value="{{ search_query }}">
+             <button type="submit">Caută</button>
+         </form>
+     </div>
+     
+     <div class="grid-container">
+         {% for articol in articole %}
+             <div class="articol {% if articol.is_new %}new-article{% endif %}">
+                 <h2>{{ articol.title }}</h2>
+                 <p class="published-date">Publicat la: {{ articol.published_date|date:"d M Y" }}</p>
+                 {% if articol.is_new %}
+                     <span class="new-badge">Nou</span>
+                 {% endif %}
+                 <p>{{ articol.description }}</p>
+                 {% if articol.image_url %}
+                     <img src="{{ articol.image_url }}" alt="Imagine articol">
+                 {% endif %}
+                 <a href="{{ articol.article_url }}" target="_blank">Citește mai mult</a>
+             </div>
+         {% empty %}
+             <p>Nu s-au găsit articole.</p>
+         {% endfor %}
+     </div>
+ </body>
+ </html>

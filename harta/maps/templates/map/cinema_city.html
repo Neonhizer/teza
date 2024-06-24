@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Cinema City</title>
+    <style>
+        
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .movie {
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            margin-bottom: 20px;
+            display: flex;
+            flex-wrap: wrap;
+        }
+
+        .movie-details {
+            flex: 1;
+            padding: 20px;
+        }
+
+        .movie-poster {
+            max-width: 300px;
+        }
+
+        .movie-poster img {
+            max-width: 100%;
+            height: auto;
+        }
+
+        h1, h2 {
+            color: #333;
+        }
+
+        p {
+            color: #666;
+        }
+
+        .movie-title {
+            text-decoration: none;
+            color: #333;
+        }
+
+        .movie-title:hover {
+            color: #666;
+        }
+
+        .read-more {
+            display: inline-block;
+            background-color: #007bff;
+            color: #fff;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+
+        .read-more:hover {
+            background-color: #0056b3;
+        }
+
+        .home-button {
+            display: inline-block;
+            background-color: #28a745;
+            color: #fff;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        .home-button:hover {
+            background-color: #218838;
+        }
+
+
+
+        .scroll-to-top {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            background-color: #007bff;
+            color: #fff;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 40px;
+            font-size: 24px;
+            text-decoration: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .scroll-to-top:hover {
+            background-color: #0056b3;
+        }
+
+        .scroll-to-top.show {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Cinema City</h1>
+        <a href="http://127.0.0.1:8000/harta" class="home-button">Acasa</a>
+        <div id="results">
+            {% for movie in movies %}
+            <div class="movie">
+                <div class="movie-poster">
+                    {% if movie.poster_link %}
+                    <img src="{{ movie.poster_link }}" alt="{{ movie.title }} poster">
+                    {% else %}
+                    <p>Poster indisponibil</p>
+                    {% endif %}
+                </div>
+                <div class="movie-details">
+                    <h2><a href="{{ movie.movie_link }}" class="movie-title" target="_blank">{{ movie.title }}</a></h2>
+                    <p>{{ movie.description }}</p>
+                    <p>Ore difuzare: {{ movie.showtimes|join:", " }}</p>
+                    <a href="{{ movie.movie_link }}" class="read-more" target="_blank">Mai multe detalii</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    <a href="#" class="scroll-to-top">&uarr;</a>
+
+    <script>
+        window.addEventListener('scroll', function() {
+            var scrollToTopButton = document.querySelector('.scroll-to-top');
+            if (window.pageYOffset > 200) {
+                scrollToTopButton.classList.add('show');
+            } else {
+                scrollToTopButton.classList.remove('show');
+            }
+        });
+
+        document.querySelector('.scroll-to-top').addEventListener('click', function(e) {
+            e.preventDefault();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    </script>
+</body>
+</html>

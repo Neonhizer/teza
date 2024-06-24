@@ -1,0 +1,43 @@
+<div class="search-container">
+    <form method="GET" action="{% url 'aulafinala' %}">
+        <input type="text" name="query" placeholder="Search articles..." value="{{ query }}">
+        <button type="submit">Search</button>
+    </form>
+</div>
+
+<div class="articles-container">
+    {% if query %}
+        <h2>Search Results for "{{ query }}"</h2>
+    {% endif %}
+
+    {% if articles %}
+        {% for article in articles %}
+            <div class="article">
+                <img src="{{ article.image_url }}" alt="{{ article.title }}">
+                <div class="article-details">
+                    <h3>{{ article.title }}</h3>
+                    <p>{{ article.description }}</p>
+                    <a href="{{ article.article_url }}" target="_blank">Read more</a>
+                    <p class="published-date">Published on: {{ article.published_date }}</p>
+                </div>
+            </div>
+        {% endfor %}
+    {% else %}
+        {% if query %}
+            <p>No articles found.</p>
+        {% else %}
+            <h2>All Articles</h2>
+            {% for articol in articole %}
+                <div class="article">
+                    <img src="{{ articol.image_url }}" alt="{{ articol.title }}">
+                    <div class="article-details">
+                        <h3>{{ articol.title }}</h3>
+                        <p>{{ articol.description }}</p>
+                        <a href="{{ articol.article_url }}" target="_blank">Read more</a>
+                        <p class="published-date">Published on: {{ articol.published_date }}</p>
+                    </div>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endif %}
+</div>

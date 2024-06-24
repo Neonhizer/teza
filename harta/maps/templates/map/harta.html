@@ -1,213 +1,1165 @@
-<!--
-
 <!DOCTYPE html>
-<html>
+<html lang="en">
+
 <head>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
-    <style>
-        html, body {
-            height: 100%;
-            margin: 0;
-            padding: 0;
-        }
-        #map {
-            width: 100%;
-            height: 100vh;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      display: flex; /* Folosește flex pentru a poziționa elementele în linie */
+      height: 100vh; /* Asigură-te că body-ul ocupă întreaga înălțime a ecranului */
+    }
+    
+    #event-container, #movies-modal, #theater-modal  {
+      width: 300px; /* Setează o lățime fixă pentru secțiunea categoriilor */
+      overflow-y: auto; /* Permite scroll dacă conținutul depășește înălțimea */
+      padding: 20px;
+      box-shadow: 0px 0px 20px 0px rgba(0, 0, 0, 0.1); /* O mică umbră pentru efect vizual */
+    }
+    
+    #map-container {
+      flex-grow: 1; /* Restul spațiului disponibil va fi ocupat de harta */
+      position: relative; /* Poziționare relativă pentru ca harta să se așeze în interiorul containerului */
+    }
+    
+    #map {
+      width: 100%; /* Harta va ocupa întreaga lățime disponibilă în #map-container */
+      height: 100%; /* și întreaga înălțime */
+    }
+    
+
+    #image-container {
+      position: absolute;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0px 0px 20px 0px rgba(0, 0, 0, 0);
+      max-width: 400px;
+      overflow-x: auto;
+      z-index: 1000;
+      display: none;
+    }
+
+    #image-container img {
+      width: 150px;
+      height: 100px;
+      margin-right: 10px;
+      border-radius: 10px;
+      box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.1);
+      transition: transform 0.3s ease-in-out;
+    }
+
+    #image-container img:hover {
+      transform: scale(1.1);
+    }
+
+    #image-container p {
+      font-size: 16px;
+      color: #333333;
+    }
+
+    #events-modal,  #movies-modal, #theater-modal {
+      /* Poziționarea modalului lângă event-container, în loc de fixed */
+      flex: 0 0 300px; /* Lățimea pentru modalul evenimentelor */
+      margin-left: 20px; /* Spațiu între event-container și events-modal */
+      background: white; /* Background alb pentru modal */
+      border-radius: 10px;
+      box-shadow: 0px 4px 8px rgba(0,0,0,0.1);
+      padding: 20px;
+      overflow-y: auto; /* Permite scroll pentru conținutul interior */
+      display: none; /* Ascuns inițial */
+      height: 100%; 
+      
+    }
+    
+    #events-content,  #movies-modal, #theater-modal {
+   
+     
+      max-width: 500px;
+      max-height: 650px; /* sau orice înălțime preferi */
+      overflow-y: auto; /* asta permite scrollbar-ul pe verticală */
+    }
+
+
+     .close-btn {
+      padding: 10px 20px;
+      background-color: #f44336; /* Culoare roșu închis pentru fundal */
+      color: white; /* Textul să fie alb */
+      border: none; /* Fără bordură */
+      border-radius: 5px; /* Colțuri rotunjite */
+      cursor: pointer; /* Cursor tip pointer când mouse-ul este deasupra butonului */
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2); /* O mică umbră pentru efect de profunzime */
+      transition: background-color 0.2s, box-shadow 0.2s; /* Tranzitii pentru hover */
+    
+    
+     
+  
+     
+    }
+    .close-btn:hover {
+      background-color: #d32f2f; /* Culoare puțin mai deschisă pentru hover */
+      box-shadow: 0 4px 8px rgba(0,0,0,0.3); /* Umbră mai mare pentru hover */
+    }
+
+    .close-btn:focus {
+      outline: none; /* Elimină conturul albastru atunci când este focalizat */
+    }
+
+    .modal {
+      display: none;
+    }
+
+
+
+    #movies-content img {
+      max-width: 200px; /* Ajustează această valoare după preferințe */
+      height: auto; /* Păstrează proporțiile imaginii */
+      display: block; /* Afișează imaginile pe linii separate */
+      margin: 0 auto; /* Centrează imaginile orizontal */
+    }
+
+    
+
+    #theater-content img {
+      max-width: 300px; /* Ajustează această valoare după preferințe */
+      height: auto; /* Păstrează proporțiile imaginii */
+      display: block; /* Afișează imaginile pe linii separate */
+      margin: 0 auto 10px; /* Centrează imaginile orizontal și adaugă un mic spațiu dedesubt */
+    }
+
+
+    #theater-content h3 {
+      font-size: 1.2em; /* Mărește dimensiunea titlului */
+      margin-bottom: 5px; /* Adaugă un mic spațiu sub titlu */
+    }
+    
+    #theater-content p {
+      margin: 5px 0; /* Adaugă un mic spațiu deasupra și dedesubt pentru fiecare paragraf */
+      color: #555; /* Culoare gri pentru text */
+    }
+
+
+
+    #theater-content div {
+      border-bottom: 1px solid #ddd; /* Linie gri deschis pentru separator */
+      padding-bottom: 10px; /* Adaugă un mic spațiu sub fiecare spectacol */
+      margin-bottom: 10px; /* Și un spațiu suplimentar după separator */
+    }
+    
+    #theater-content div:last-child {
+      border-bottom: none; /* Elimină separatorul pentru ultimul spectacol */
+      margin-bottom: 0; /* Și elimină spațiul suplimentar */
+    }
+
+
+
+ .event-card {
+  display: flex;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.event-image {
+  max-width: 150px;
+  height: auto;
+  object-fit: cover;
+}
+
+.event-details {
+  padding: 10px;
+  flex-grow: 1;
+  background-color: #f8f8f8;
+}
+
+.event-link {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 5px 10px;
+  background-color: #007bff;
+  color: #fff;
+  text-decoration: none;
+  border-radius: 5px;
+  transition: background-color 0.3s ease;
+}
+
+.event-link:hover {
+  background-color: #0056b3;
+}
+
+
+
+
+
+
+.event {
+  margin-bottom: 20px;
+  padding: 10px;
+  background-color: #f8f8f8;
+  border-radius: 5px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.event h3 {
+  margin: 0 0 10px;
+  font-size: 18px;
+}
+
+.event img {
+  max-width: 100%;
+  height: auto;
+  margin-bottom: 10px;
+}
+
+.event p {
+  margin: 5px 0;
+}
+
+.event a {
+  display: inline-block;
+  margin-top: 10px;
+  color: #007bff;
+  text-decoration: none;
+}
+
+
+
+#calendar-dates .current-date {
+  background-color: #ff0000; /* Culoare de fundal pentru data curentă */
+  color: #ffffff; /* Culoare text pentru data curentă */
+  font-weight: bold;
+}
+
+
+
+    #calendar-container {
+      max-width: 350px; /* Adjust the width to fit on the screen */
+      margin: 20px; /* Add margin for aesthetics */
+      padding: 10px;
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      overflow: hidden; /* Prevent scrolling */
+    }
+    
+    #calendar-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px; /* Adjust spacing */
+    }
+    
+    #calendar-days {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr); /* Create seven columns for the days */
+      background-color: #eee;
+      text-align: center;
+    }
+    
+    #calendar-days div {
+      padding: 5px 0; /* Reduce padding for a more compact look */
+      font-weight: bold;
+    }
+    
+    #calendar-dates {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr); /* Align with the days of the week */
+      text-align: center;
+    }
+    
+    #calendar-dates div {
+      padding: 5px 0; /* Consistent padding with the header */
+      cursor: pointer;
+    }
+    
+    #calendar-dates div:not(:empty):hover {
+      background-color: #ddd; /* Hover effect only on non-empty cells */
+    }
+    
+
+
+
+
+
+
+    .chat-container {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 300px;
+      height: 400px;
+      background-color: white;
+      border-radius: 10px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      transition: height 0.3s ease;
+    }
+    
+    .chat-container.minimized {
+      height: 40px;
+    }
+
+
+     .chat-header {
+      background-color: #333;
+      color: white;
+      padding: 10px;
+      text-align: center;
+      font-weight: bold;
+    } 
+    .chat-header button {
+      background-color: #fff;
+      color: #333;
+      border: none;
+      border-radius: 5px;
+      padding: 5px 10px;
+      font-size: 14px;
+      cursor: pointer;
+      margin-left: 10px;
+    }
+    
+    .chat-header button:hover {
+      background-color: #f2f2f2;
+    }
+    .chat-body {
+      flex-grow: 1;
+      overflow-y: auto;
+      padding: 10px;
+    }
+
+    .chat-message {
+      margin-bottom: 10px;
+      padding: 10px;
+      border-radius: 10px;
+    }
+
+    .user-message {
+      background-color: #e6e6e6;
+      text-align: right;
+    }
+
+    .ai-message {
+      background-color: #d9edf7;
+    }
+
+    .chat-footer {
+      display: flex;
+      padding: 10px;
+      background-color: #f2f2f2;
+    }
+
+    .chat-input {
+      flex-grow: 1;
+      padding: 5px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    .chat-submit {
+      margin-left: 10px;
+      padding: 5px 10px;
+      background-color: #333;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    } 
+
+
+
+
+
+    
+  </style>
 </head>
+
+
+
 <body>
-    <div id="map"></div>
-    <div id="current-location">Locatia ta curenta: Latitudine 0.0000, Longitudine 0.0000</div>
-    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-    <script>
-        var map;
-        var marker;
 
-        function create2DMap() {
-            map = L.map('map').setView([45.657975, 25.601198], 15);
+  <div class="chat-container">
+    <div class="chat-header">
+      Chat
+      <button onclick="clearChatHistory()">Clear History</button>
+      <button onclick="toggleChatMinimize()">
+        <i class="fas fa-window-minimize"></i>
+      </button>
+    </div>
+    <div class="chat-body">
+      {% for history in chat_history %}
+        <div class="chat-message user-message">
+          <p>You: {{ history.user_message }}</p>
+        </div>
+        <div class="chat-message ai-message">
+          <p>AI: {{ history.ai_response }}</p>
+        </div>
+      {% endfor %}
+  
 
-            var standardLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png');
+      {% if response %}
+      <div class="chat-message ai-message">
+        <p>AI: {{ response }}</p>
+      </div>
+    {% endif %}
 
-            map.addLayer(standardLayer);
+    
+      {% if user_input %}
+        <div class="chat-message user-message">
+          <p>You: {{ user_input }}</p>
+        </div>
+      {% endif %}
+  
+      {% if error %}
+        <div class="chat-message error-message">
+          <p>Error: {{ error }}</p>
+        </div>
+      {% endif %}
+    </div>
+    <div class="chat-footer">
+      <form method="post" action="{% url 'chat_with_mistral' %}">
+        {% csrf_token %}
+        <input type="text" name="message" placeholder="Type your message..." class="chat-input">
+        <input type="submit" value="Send" class="chat-submit">
+      </form>
+    </div>
+  </div>
 
-            if ("geolocation" in navigator) {
-                navigator.geolocation.getCurrentPosition(function(position) {
-                    var userLat = position.coords.latitude;
-                    var userLng = position.coords.longitude;
+<script>
+  
 
-                    L.marker([userLat, userLng], { icon: getOrangeIcon() }).addTo(map)
-                        .bindPopup("Locația ta curentă")
-                        .openPopup();
+  
+  function clearChatHistory() {
+      if (confirm("Are you sure you want to clear the chat history?")) {
+          window.location.href = "{% url 'clear_chat_history' %}";
+      }
+  }
+  </script>
 
-                    document.getElementById("current-location").innerHTML = "Locatia ta curenta: Latitudine " + userLat.toFixed(4) + ", long " + userLng.toFixed(4);
-                });
-            }
-
-            
-            addMarker([45.64277777777778, 25.589166666666665], "Centru Vechi");
-            addMarker([45.63583333333333, 25.580000000000002], "Schei");
-            addMarker([45.666666666666664, 25.576666666666665], "Locatie 3");
-            addMarker([45.645833333333336, 25.580000000000002], "Locatie 4");
-            addMarker([45.663333333333334, 25.618333333333336], "Locatie 5");
-            addMarker([45.61333333333333, 25.63972222222222], "Locatie 6");
-            addMarker([45.59583333333333, 25.554166666666667], "Locatie 7");
-            addMarker([45.70805555555555, 25.575], "Locatie 8");
-            addMarker([45.67638888888889, 25.644166666666663], "Locatie 9");
-            addMarker([45.65722222222222, 25.59972222222222], "Locatie 10");
-            addMarker([45.63416666666667, 25.607222222222223], "Locatie 11");
-            addMarker([45.65222222222222, 25.620833333333334], "Locatie 12");
-            addMarker([45.65222222222222, 25.611666666666665], "Centru Civic");
-            
-
-            map.on('click', function(e) {
-                var lat = e.latlng.lat;
-                var lng = e.latlng.lng;
-
-                
-                if (marker) {
-                    map.removeLayer(marker);
-                }
-
-               
-                var redIcon = L.icon({
-                    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
-                    iconSize: [25, 41],
-                    iconAnchor: [12, 41],
-                    popupAnchor: [1, -34],
-                    shadowSize: [41, 41]
-                });
-
-                marker = L.marker([lat, lng], { icon: redIcon }).addTo(map)
-                    .bindPopup("Locația ta selectată")
-                    .openPopup();
-            });
-        }
-
-        function addMarker(coordinates, popupText) {
-            L.marker(coordinates).addTo(map)
-                .bindPopup(popupText)
-                .openPopup();
-        }
-
-        function getOrangeIcon() {
-            return L.icon({
-                iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-orange.png', // Icoană de culoare oranj
-                iconSize: [25, 41],
-                iconAnchor: [12, 41],
-                popupAnchor: [1, -34],
-                shadowSize: [41, 41]
-            });
-        }
-
-        create2DMap();
-    </script>
-</body>
-</html>
--->
-
-<!DOCTYPE html>
-<html>
-<head>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
-    <style>
-        html, body {
-            height: 100%;
-            margin: 0;
-            padding: 0;
-        }
-        #map {
-            width: 100%;
-            height: 100vh;
-        }
-    </style>
-</head>
-<body>
-    <div id="map"></div>
-    <div id="current-location">Locatia ta curenta: Latitudine 0.0000, Longitudine 0.0000</div>
-    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-    <script>
-        var map;
-        var marker;
-
-        function create2DMap() {
-            map = L.map('map').setView([45.657975, 25.601198], 15);
-
-            var standardLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png');
-
-            map.addLayer(standardLayer);
-
-            if ("geolocation" in navigator) {
-                navigator.geolocation.getCurrentPosition(function(position) {
-                    var userLat = position.coords.latitude;
-                    var userLng = position.coords.longitude;
-
-                    L.marker([userLat, userLng], { icon: getOrangeIcon() }).addTo(map)
-                        .bindPopup("Locația ta curentă")
-                        .openPopup();
-
-                    document.getElementById("current-location").innerHTML = "Locatia ta curenta: Latitudine " + userLat.toFixed(4) + ", long " + userLng.toFixed(4);
-                });
-            }
-
-            
-            addMarker([45.64277777777778, 25.589166666666665], "Centru Vechi");
-            addMarker([45.63583333333333, 25.580000000000002], "Schei");
-            addMarker([45.666666666666664, 25.576666666666665], "Locatie 3");
-            addMarker([45.645833333333336, 25.580000000000002], "Locatie 4");
-            addMarker([45.663333333333334, 25.618333333333336], "Locatie 5");
-            addMarker([45.61333333333333, 25.63972222222222], "Locatie 6");
-            addMarker([45.59583333333333, 25.554166666666667], "Locatie 7");
-            addMarker([45.70805555555555, 25.575], "Locatie 8");
-            addMarker([45.67638888888889, 25.644166666666663], "Locatie 9");
-            addMarker([45.65722222222222, 25.59972222222222], "Locatie 10");
-            addMarker([45.63416666666667, 25.607222222222223], "Locatie 11");
-            addMarker([45.65222222222222, 25.620833333333334], "Locatie 12");
-            addMarker([45.65222222222222, 25.611666666666665], "Centru Civic");
-            
-
-            map.on('click', function(e) {
-                var lat = e.latlng.lat;
-                var lng = e.latlng.lng;
-
-                
-                if (marker) {
-                    map.removeLayer(marker);
-                }
-
-               
-                var redIcon = L.icon({
-                    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
-                    iconSize: [25, 41],
-                    iconAnchor: [12, 41],
-                    popupAnchor: [1, -34],
-                    shadowSize: [41, 41]
-                });
-
-                marker = L.marker([lat, lng], { icon: redIcon }).addTo(map)
-                    .bindPopup("Locația ta selectată")
-                    .openPopup();
-            });
-        }
+  <div id="event-container">
+    <h2>Categorii</h2>
+    <ul>
+      <li><a href="#" onclick="showCategory('filme')">Filme</a></li>
+      <li><a href="#" onclick="showCategory('teatru')">Teatru</a></li>
+      <li><a href="#" id="show-culture">Cultură altele</a></li>
         
+       
+    </ul>
+    
+<div id="calendar-container">
+  <div id="calendar-header">
+    <button id="prev-month">&lt;</button>
+    <h2 id="month-year">March 2024</h2>
+    <button id="next-month">&gt;</button>
+  </div>
+  <div id="calendar-days">
+    
+    <div>Lun</div>
+    <div>Mar</div>
+    <div>Mie</div>
+    <div>Joi</div>
+    <div>Vin</div>
+    <div>Sâm</div>
+    <div>Dum</div>
+  </div>
+  <div id="calendar-dates">
+    
+  </div>
+</div>
 
-        function addMarker(coordinates, popupText) {
-            L.marker(coordinates).addTo(map)
-                .bindPopup(popupText)
-                .openPopup();
+
+
+
+<div id="eventsModal" class="modal">
+  <div id="eventsContent"></div>
+  <button id="closeModal" class="close-btn">Închide</button>
+</div>
+
+</div>
+<!-- Div pentru chenarul/modalul de evenimente -->
+<div id="events-modal" class="modal">
+  <div id="events-content"></div>
+  <div id="images-content" style="display: none;"></div>
+  <button onclick="closeEventsModal()" class="close-btn">Închide</button>
+  <button id="aula-btn" onclick="showEventsForLocation('Aula')">Aula</button>
+  <button id="primaria-btn" onclick="showEventsForLocation('Primaria')">Primaria</button>
+</div>
+
+<!-- Div pentru modalul de filme -->
+<div id="movies-modal" class="modal">
+  <div id="movies-content"></div>
+  <button onclick="closeMoviesModal()" class="close-btn">Închide</button>
+</div>
+
+<!-- Div pentru modalul de teatru -->
+<div id="theater-modal" class="modal">
+  <div id="theater-content"></div>
+  <button onclick="closeTheaterModal()" class="close-btn">Închide</button>
+</div>
+
+
+
+
+  <div id="map-container">
+    <div id="map"></div>
+    <div id="image-container"></div>
+  </div>
+
+
+
+
+
+  <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+  <script>
+    var map;
+    var marker;
+    var civicMarker;
+    
+
+  
+    function create2DMap() {
+      
+      map = L.map('map').setView([45.657975, 25.601198], 15);
+   
+      var standardLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png');
+      map.addLayer(standardLayer);
+
+      if ("geolocation" in navigator) {
+        navigator.geolocation.getCurrentPosition(function (position) {
+          var userLat = position.coords.latitude;
+          var userLng = position.coords.longitude;
+
+          L.marker([userLat, userLng], { icon: getOrangeIcon() }).addTo(map)
+            .bindPopup("Locatia ta curenta")
+            .openPopup();
+
+          document.getElementById("current-location").innerHTML = "Locatia ta curenta: Latitudine " + userLat.toFixed(4) + ", long " + userLng.toFixed(4);
+        
+          document.getElementById('categoria-cultura').addEventListener('click', function() {
+            showAllEvents();
+          });
+          
+        });
+      }
+      addMarker([45.64277777777778, 25.589166666666665], "Centru Vechi");
+      civicMarker = addMarkerWithImages([45.65222222222222, 25.611666666666665], "Centru Civic");
+      var vechiMarker = addMarkerWithImagesCentruVechi([45.64277777777778, 25.589166666666665], "Centru Vechi");
+      
+
+
+
+      function addMarkerWithImagesCentruVechi(coordinates, popupText) {
+        var marker = L.marker(coordinates).addTo(map);
+
+        marker.bindPopup(popupText).on('popupopen', function () {
+            fetch('/get_images_centru_vechi/')
+                .then(response => response.json())
+                .then(data => {
+                    displayImagesCentruVechi(data.imagini);
+                })
+                .catch(error => console.error('Error:', error));
+        });
+
+        marker.on('click', function (e) {
+            if (currentPopup && currentPopup !== e.target) {
+                currentPopup.closePopup();
+            }
+
+            currentPopup = e.target;
+
+            if (imageContainer.style.display === "block") {
+                imageContainer.style.display = "none";
+            } else {
+                imageContainer.style.display = "block";
+            }
+        });
+
+        return marker;
+    }
+
+
+    function displayImagesCentruVechi(images) {
+      var imageContainer = document.getElementById("image-container");
+      imageContainer.innerHTML = "";
+    
+      images.forEach(function (image) {
+        var imgElement = document.createElement("img");
+        imgElement.src = 'data:image/png;base64,' + image.imagine;
+        imgElement.alt = image.nume;
+    
+        imgElement.addEventListener('click', function() {
+          redirectToPageCentruVechi(image.nume);
+        });
+    
+        imgElement.setAttribute("onclick", "redirectToPageCentruVechi('" + image.nume + "')");
+    
+        imageContainer.appendChild(imgElement);
+      });
+    
+      imageContainer.style.display = "block";
+    
+
+
+
+    }
+      map.on('click', function (e) {
+        var lat = e.latlng.lat;
+        var lng = e.latlng.lng;
+
+        if (marker) {
+          map.removeLayer(marker);
         }
 
-        function getOrangeIcon() {
-            return L.icon({
-                iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-orange.png', // Icoană de culoare oranj
-                iconSize: [25, 41],
-                iconAnchor: [12, 41],
-                popupAnchor: [1, -34],
-                shadowSize: [41, 41]
-            });
+        if (civicMarker) {
+          civicMarker.closePopup();
+          civicMarker = null;
+          imageContainer.style.display = "none";
+          document.getElementById("image-container").style.display = "none";
         }
 
-        create2DMap();
-    </script>
+        var redIcon = L.icon({
+          iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
+          iconSize: [25, 41],
+          iconAnchor: [12, 41],
+          popupAnchor: [1, -34],
+          shadowSize: [41, 41]
+        });
+
+        marker = L.marker([lat, lng], { icon: redIcon }).addTo(map)
+          .bindPopup("Locatia ta selectata")
+          .openPopup();
+      });
+
+      function addMarker(coordinates, popupText) {
+        L.marker(coordinates).addTo(map)
+          .bindPopup(popupText)
+          .openPopup();
+      }
+
+      var imageContainer = document.getElementById("image-container");
+      var currentPopup = null;
+      
+      function addMarkerWithImages(coordinates, popupText) {
+          var marker = L.marker(coordinates).addTo(map);
+      
+          marker.bindPopup(popupText).on('popupopen', function () {
+              // La deschiderea popup-ului - imaginile pentru centrul civic
+              fetch('/get_images_centru_civic/')
+                  .then(response => response.json())
+                  .then(data => {
+                      displayImages(data.imagini);
+                  })
+                  .catch(error => console.error('Error:', error));
+          });
+      
+          marker.on('click', function (e) {
+           
+              if (currentPopup && currentPopup !== e.target) {
+                  currentPopup.closePopup();
+              }
+      
+              currentPopup = e.target;
+      
+              // La clic pe marker, afiseaza sau ascunde containerul de imagini
+              if (imageContainer.style.display === "block") {
+                  imageContainer.style.display = "none";
+              } else {
+                  imageContainer.style.display = "block";
+              }
+          });
+      
+          return marker;
+      }
+function displayImages(images) {
+  var imageContainer = document.getElementById("image-container");
+  imageContainer.innerHTML = "";
+
+  images.forEach(function (image) {
+    var imgElement = document.createElement("img");
+    imgElement.src = 'data:image/png;base64,' + image.imagine;
+    imgElement.alt = image.nume;
+
+    imgElement.addEventListener('click', function() {
+      redirectToPage(image.nume);
+    });
+
+    imgElement.setAttribute("onclick", "redirectToPage('" + image.nume + "')");
+
+    imageContainer.appendChild(imgElement);
+  });
+
+  imageContainer.style.display = "block";
+}
+      
+     
+      function redirectToPage(numeImagine) {
+      if (numeImagine === "Aula UniTBv") {
+        window.location.href = '/aula/';
+      } else if (numeImagine === "CinemaCity") {
+        window.location.href = '/cinema_city/';
+      }
+    }
+      
+
+
+      function redirectToPageCentruVechi(numeImagine) {
+       
+        if (numeImagine === "Teatru Dramatic") {
+          window.location.href = '/teatru/';
+        } else if (numeImagine === "Primaria") {
+          window.location.href = '/primaria/';
+        }
+      }
+
+    function getOrangeIcon() {
+      return L.icon({
+        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-orange.png',
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41]
+      });
+    }
+  }
+
+
+    function addMarkerWithImages(coordinates, popupText) {
+      var marker = L.marker(coordinates).addTo(map);
+
+      marker.bindPopup(popupText).on('popupopen', function () {
+        fetch('/get_images/')
+          .then(response => response.json())
+          .then(data => {
+            displayImages(data.imagini);
+          })
+          .catch(error => console.error('Error:', error));
+      });
+
+      marker.on('click', function (e) {
+        var imageContainer = document.getElementById("image-container");
+
+        if (imageContainer.style.display === "block") {
+          imageContainer.style.display = "none";
+        } else {
+          imageContainer.style.display = "block";
+        }
+      });
+
+      return marker;
+    }
+
+
+    function closeAllModals() {
+      const modals = document.querySelectorAll('.modal');
+      modals.forEach(modal => {
+        modal.style.display = 'none';
+      });
+    }
+    
+    function showCategory(category) {
+      closeAllModals();
+    
+      let url;
+      if (category === 'filme') {
+        url = '/events_filme/';
+        fetch(url)
+          .then(response => response.json())
+          .then(data => {
+            const events = data.events;
+            displayMovies(events);
+            document.getElementById('movies-modal').style.display = 'block';
+          })
+          .catch(error => console.error('Error:', error));
+      } else if (category === 'teatru') {
+        url = '/events_teatru/';
+        fetch(url)
+          .then(response => response.json())
+          .then(data => {
+            const events = data.events;
+            displayTheater(events);
+            document.getElementById('theater-modal').style.display = 'block';
+          })
+          .catch(error => console.error('Error:', error));
+      }
+    }
+    
+    function showAllEvents() {
+      closeAllModals();
+      var url = '/get_all_events/';
+      fetch(url)
+        .then(response => response.json())
+        .then(data => {
+          displayEvents(data.events);
+          document.getElementById('events-modal').style.display = 'block';
+        })
+        .catch(error => console.error('Eroare:', error));
+    }
+    
+    document.getElementById('show-culture').addEventListener('click', function() {
+      showAllEvents();
+    });
+
+
+    function closeAllModals() {
+      document.getElementById('movies-modal').style.display = 'none';
+      document.getElementById('theater-modal').style.display = 'none';
+      document.getElementById('events-modal').style.display = 'none';
+    }
+
+
+
+
+
+
+
+
+    function displayMovies(movies) {
+      const moviesContent = document.getElementById('movies-content');
+      moviesContent.innerHTML = '';
+    
+      movies.forEach(movie => {
+        const movieElement = document.createElement('div');
+        movieElement.innerHTML = `
+          <h3>${movie.title}</h3>
+          <p>${movie.description}</p>
+          <img src="${movie.poster_link}">
+          <a href="${movie.movie_link}" target="_blank">Vizualizare trailer</a>
+        `;
+        moviesContent.appendChild(movieElement);
+      });
+    }
+    
+    function displayTheater(shows) {
+      const theaterContent = document.getElementById('theater-content');
+      theaterContent.innerHTML = '';
+    
+      shows.forEach(show => {
+        const showElement = document.createElement('div');
+        showElement.innerHTML = `
+          <h3>${show.title}</h3>
+          <p>Autor: ${show.author}</p>
+          <p>Data: ${show.date_time}</p>
+          <img src="${show.image_url}">
+          <a href="${show.title_link}" target="_blank">Vizualizare detalii</a>
+        `;
+        theaterContent.appendChild(showElement);
+      });
+    }
+
+
+
+
+  function closeMoviesModal() {
+  document.getElementById('movies-modal').style.display = 'none';
+}
+
+function closeTheaterModal() {
+  document.getElementById('theater-modal').style.display = 'none';
+}
+
+function closeEventsModal() {
+  document.getElementById('events-modal').style.display = 'none';
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function displayEvents(events) {
+  const eventsContent = document.getElementById('events-content');
+  eventsContent.innerHTML = '';
+
+  events.forEach(event => {
+    const eventElement = document.createElement('div');
+    eventElement.classList.add('event-card');
+
+    if (event.showtimes) { // Verifică dacă este un film
+      eventElement.innerHTML = `
+        <h3>${event.title}</h3>
+        <p>${event.description}</p>
+        <p>Ore de difuzare: ${event.showtimes.join(', ')}</p>
+        <a href="${event.movie_link}" target="_blank" class="event-link">Vizualizare trailer</a>
+      `;
+    } else if (event.author) { // Verifică dacă este un eveniment de teatru
+      eventElement.innerHTML = `
+        <h3>${event.title}</h3>
+        <p>Autor: ${event.author}</p>
+        <p>Data: ${event.date_time}</p>
+        <a href="${event.title_link}" target="_blank" class="event-link">Vizualizare detalii</a>
+      `;
+    } else { // Altfel, este un alt tip de eveniment
+      const imageElement = document.createElement('img');
+      imageElement.src = event.image_url;
+      imageElement.alt = event.title;
+      imageElement.classList.add('event-image');
+      eventElement.appendChild(imageElement);
+
+      const detailsElement = document.createElement('div');
+      detailsElement.classList.add('event-details');
+
+      const titleElement = document.createElement('h3');
+      titleElement.textContent = event.title;
+      detailsElement.appendChild(titleElement);
+
+      if (event.date) {
+        const dateElement = document.createElement('p');
+        dateElement.classList.add('event-date');
+        dateElement.textContent = `Data: ${event.date}`;
+        detailsElement.appendChild(dateElement);
+      }
+
+      const linkElement = document.createElement('a');
+      linkElement.href = event.article_url;
+      linkElement.target = '_blank';
+      linkElement.classList.add('event-link');
+      linkElement.textContent = 'Detalii';
+      detailsElement.appendChild(linkElement);
+
+      eventElement.appendChild(detailsElement);
+    }
+
+    eventsContent.appendChild(eventElement);
+  });
+}
+
+
+
+
+
+
+
+
+
+
+
+
+// Functie pentru a inchide modalul
+function closeEventsModal() {
+  document.getElementById('events-modal').style.display = 'none';
+}
+
+    
+   
+    function closeEventsModal() {
+      document.getElementById('events-modal').style.display = 'none';
+      document.getElementById('events-content').style.display = 'block'; // Arată din nou evenimentele când se închide modalul
+      document.getElementById('images-content').style.display = 'none'; // Ascunde imaginile
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function showEventsForLocation(location) {
+  // Șterge conținutul de imagini, dacă există
+  document.getElementById('images-content').innerHTML = '';
+  
+  let url = '';
+  if (location === 'Aula') {
+    url = '/events_aula/';
+  } else if (location === 'Primaria') {
+    url = '/events_primaria/';
+  }
+
+  fetch(url)
+    .then(response => response.json())
+    .then(data => {
+      displayEvents(data.events); // Afișează evenimentele
+      // Ascunde și afișează div-urile corespunzător
+      document.getElementById('images-content').style.display = 'none';
+      document.getElementById('events-content').style.display = 'block';
+    })
+    .catch(error => console.error('Error:', error));
+}
+
+
+// Adaugă ascultători de evenimente pentru Aula și Primaria pentru a încărca evenimentele
+document.getElementById('aula-btn').addEventListener('click', function() { showEventsForLocation('Aula'); });
+document.getElementById('primaria-btn').addEventListener('click', function() { showEventsForLocation('Primaria'); });
+
+
+
+create2DMap();
+
+
+
+function showCinemaCityLocation(coords) {
+  // Creăm un icon personalizat pentru marker
+  var customIcon = L.icon({
+    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-violet.png',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41]
+  });
+
+  // Adăugăm markerul pe hartă cu iconul personalizat
+  var civicMarker = L.marker(coords, { icon: customIcon }).addTo(map);
+  map.setView(coords, 18);
+  civicMarker.bindPopup("Cinema City").openPopup();
+}
+
+{% if cinema_city_coords %}
+  var cinemaCityCoords = {{ cinema_city_coords }};
+  showCinemaCityLocation(cinemaCityCoords);
+{% endif %}
+
+
+
+const monthNames = ["Ianuarie", "Februarie", "Martie", "Aprilie", "Mai", "Iunie", "Iulie", "August", "Septembrie", "Octombrie", "Noiembrie", "Decembrie"];
+let currentMonth = new Date().getMonth();
+let currentYear = new Date().getFullYear();
+
+function generateCalendar(month, year, currentDate) {
+  const firstDay = (new Date(year, month).getDay() + 6) % 7; // Adjust the first day of the week for Monday
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+  document.getElementById('month-year').textContent = `${monthNames[month]} ${year}`;
+  const datesContainer = document.getElementById('calendar-dates');
+  datesContainer.innerHTML = ''; // Clear the previous dates
+
+  // Fill the empty spaces for the first week
+  for (let i = 0; i < firstDay; i++) {
+    datesContainer.innerHTML += '<div></div>';
+  }
+
+  for (let i = 1; i <= daysInMonth; i++) {
+    const dateClass = (i === currentDate.getDate() && month === currentDate.getMonth() && year === currentDate.getFullYear()) ? 'current-date' : '';
+    datesContainer.innerHTML += `<div class="${dateClass}">${i}</div>`;
+  }
+}
+
+document.getElementById('prev-month').addEventListener('click', () => {
+  if (currentMonth === 0) {
+    currentMonth = 11;
+    currentYear -= 1;
+  } else {
+    currentMonth -= 1;
+  }
+  generateCalendar(currentMonth, currentYear,  new Date());
+});
+
+document.getElementById('next-month').addEventListener('click', () => {
+  if (currentMonth === 11) {
+    currentMonth = 0;
+    currentYear += 1;
+  } else {
+    currentMonth += 1;
+  }
+  generateCalendar(currentMonth, currentYear, new Date());
+});
+generateCalendar(currentMonth, currentYear, new Date());
+
+document.getElementById('show-culture').addEventListener('click', function() {
+  document.getElementById('calendar-container').style.display = 'block';
+  generateCalendar(currentMonth, currentYear, new Date());
+});
+generateCalendar(currentMonth, currentYear, new Date());
+
+$(document).ready(function() {
+  $('#calendar-dates').on('click', 'div', function() {
+    var selectedDate = $(this).text();
+    var currentYear = $('#month-year').text().split(' ')[1];
+    var currentMonthName = $('#month-year').text().split(' ')[0];
+    var currentMonth = monthNames.indexOf(currentMonthName) + 1;
+
+    var formattedDate = currentYear + '-' + (currentMonth < 10 ? '0' : '') + currentMonth + '-' + (selectedDate < 10 ? '0' : '') + selectedDate;
+
+    $.ajax({
+      url: '/data_teatru/',
+      data: { date: formattedDate },
+      success: function(data) {
+        var eventsHtml = '';
+        data.events.forEach(function(event) {
+          eventsHtml += '<div class="event">';
+          eventsHtml += '<h3>' + event.title + '</h3>';
+          eventsHtml += '<img src="' + event.image_url + '" alt="' + event.title + '">';
+          eventsHtml += '<p>Autor: ' + event.author + '</p>';
+          eventsHtml += '<p>Data: ' + event.date_time + '</p>';
+          eventsHtml += '<p><a href="' + event.title_link + '" target="_blank">Detalii eveniment</a></p>';
+          eventsHtml += '</div>';
+        });
+        $('#eventsContent').html(eventsHtml);
+        $('#eventsModal').show();
+      }
+    });
+
+    $.ajax({
+      url: '/data_aula/',
+      data: { date: formattedDate },
+      success: function(data) {
+        var eventsHtml = '';
+        eventsHtml += '<div class="event">';
+      data.events.forEach(function(event) { 
+          eventsHtml += '<h3>' + event.title + '</h3>';
+          eventsHtml += '<img src="' + event.image_url + '" alt="' + event.title + '">';
+          eventsHtml += '<p>' + event.description + '</p>';
+          eventsHtml += '<p><a href="' + event.article_url + '" target="_blank">Detalii eveniment</a></p>';
+        });
+        $('#eventsContent').append(eventsHtml);
+        $('#eventsModal').show();
+      }
+    });
+  });  
+
+  $('#closeModal').click(function() {
+    $('#eventsModal').hide();
+  });
+});
+
+
+function toggleChatMinimize() {
+  var chatContainer = document.querySelector('.chat-container');
+  chatContainer.classList.toggle('minimized');
+}
+
+
+setInterval(() => {
+  const currentDate = new Date();
+  currentMonth = currentDate.getMonth();
+  currentYear = currentDate.getFullYear();
+  generateCalendar(currentMonth, currentYear, currentDate);
+}, 24 * 60 * 60 * 1000); // 24 ore în milisecunde
+
+
+
+
+
+
+</script>
 </body>
-</html>
+
+</html>   

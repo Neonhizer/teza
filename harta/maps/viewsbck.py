@@ -487,19 +487,13 @@ def data_aula(request):
     client.close()
     return JsonResponse({'events': formatted_events})
 
-def extract_date_primaria(description):
-    date_patterns = [
-        r'(\d{1,2}\s*(?:–|-)\s*\d{1,2}\s+(?:ianuarie|februarie|martie|aprilie|mai|iunie|iulie|august|septembrie|octombrie|noiembrie|decembrie))',
-        r'(\d{1,2}\s+(?:ianuarie|februarie|martie|aprilie|mai|iunie|iulie|august|septembrie|octombrie|noiembrie|decembrie))',
-        r'(\d{1,2}\s+(?:ianuarie|februarie|martie|aprilie|mai|iunie|iulie|august|septembrie|octombrie|noiembrie|decembrie)\s+\d{4})'
-    ]
 
-    for pattern in date_patterns:
-        date_match = re.search(pattern, description, re.IGNORECASE)
-        if date_match:
-            return date_match.group(1)
 
-    return "Data necunoscută"
+
+
+
+
+
 def primaria(request: HttpRequest):
     url = 'https://cultura.brasovcity.ro/category/evenimente-culturale-ro/'
     article_data = []
@@ -511,40 +505,37 @@ def primaria(request: HttpRequest):
 
     if response.status_code == 200:
         soup = BeautifulSoup(response.text, 'html.parser')
-        articles = soup.select('article.post')
-
-        existing_article_urls = set(news_collection.distinct('article_url'))
+        articles = soup.find_all('article', class_='post')
 
         for article in articles:
-            title_element = article.select_one('h1.entry-title')
-            image_element = article.select_one('img.thumbnail')
-            description_element = article.select_one('div.entry-summary')
+            title_element = article.find('h1', class_='entry-title')
+            image_element = article.find('img', class_='thumbnail')
+            description_element = article.find('div', class_='entry-summary')
 
             if title_element and image_element and description_element:
                 title = title_element.text.strip()
                 image_url = urljoin(base_url, image_element['src'])
                 description = description_element.text.strip()
-                article_url = title_element.select_one('a')['href'] if title_element.select_one('a') else None
+                article_url = title_element.find('a')['href']
+                existing_article = news_collection.find_one({'article_url': article_url})
 
-                if article_url:
-                    # Extragem data folosind funcția extract_date_primaria
-                    date = extract_date_primaria(description)
+                # Încercăm să extragem data din descrierea articolului
+                lines = description.split('\n')
+                date = "Data necunoscută"
+                for line in lines:
+                    date_match = re.match(r'(\d{1,2}\s*[a-zA-Z\s]+)', line)
+                    if date_match:
+                        date = date_match.group(1)
+                        break
 
-                    if article_url not in existing_article_urls:
-                        article_data.append({
-                            'title': title,
-                            'date': date,
-                            'image_url': image_url,
-                            'description': description,
-                            'article_url': article_url
-                        })
-                        existing_article_urls.add(article_url)
-                    else:
-                        # Actualizăm data articolului existent
-                        news_collection.update_one(
-                            {'article_url': article_url},
-                            {'$set': {'date': date}}
-                        )
+                if image_url and not existing_article:
+                    article_data.append({
+                        'title': title,
+                        'date': date,
+                        'image_url': image_url,
+                        'description': description,
+                        'article_url': article_url
+                    })
 
         if article_data:
             news_collection.insert_many(article_data)
@@ -553,7 +544,7 @@ def primaria(request: HttpRequest):
         client.close()
         articole_list = list(articole)
         return render(request, 'map/primaria.html', {'articole': articole_list})
-
+    
 def get_all_events(request):
     client = MongoClient("mongodb://localhost:27017/")
     db = client.maps 
@@ -610,18 +601,18 @@ def cinema_city(request):
         movie_containers = soup.find_all('div', class_='row qb-movie')
 
         for movie_container in movie_containers:
-            # Extract the movie title and link
+            # Extrage titlul filmului și link-ul
             title_link_element = movie_container.find('a', class_='qb-movie-link')
             title = title_link_element.find('h3').text.strip() if title_link_element else "Titlu indisponibil"
             movie_link = title_link_element['href'] if title_link_element else None
 
-            # movie description
+            # Extrage descrierea filmului
             description_element = movie_container.find('div', class_='qb-movie-info-wrapper')
             description_text = description_element.find('div', class_='pt-xs').text.strip() if description_element else "Descriere indisponibilă"
             genres, duration = (description_text.split('|') + [""])[:2]
             description = f"{genres.strip()} - {duration.strip()}"
 
-            # link to the poster image
+            # Căutăm link-ul către imaginea posterului
             poster_link = movie_container.find('div', class_='movie-poster-container')
             if poster_link:
                 poster_img = poster_link.find('img')
@@ -876,9 +867,8 @@ def events_filme(request):
 @csrf_exempt
 def chat_with_mistral(request):
     load_dotenv()
-    response_content = ""
+
     if request.method == 'POST':
-    
         user_input = request.POST.get('message', '')
         if not user_input:
             return render(request, 'map/harta.html', {'error': 'Nu a fost furnizată nicio intrare'})
@@ -890,7 +880,7 @@ def chat_with_mistral(request):
         client = MistralClient(api_key=api_key)
         model = "mistral-large-latest"
 
-        
+        # Conectare la MongoDB
         mongo_client = MongoClient("mongodb://localhost:27017/")
         db = mongo_client.maps
         collections = {
@@ -1029,18 +1019,20 @@ def chat_with_mistral(request):
                 response_content = "Te rog specifică un film pentru a obține detalii, folosind formatul 'Detalii despre filmul [Numele Filmului]'."
 
      
+
         elif re.search(r'trailer', user_input.lower()):
-            movie_match = re.search(r'trailer (pentru|la)\s+(.+)', user_input.lower())
-            if movie_match:
-                movie_title = movie_match.group(2)
-                movie = collections["cinemacity"].find_one({"title": {"$regex": movie_title, "$options": "i"}})
-                if movie:
-                    response_content = f"Trailer-ul pentru filmul '{movie['title']}' ar trebui să fie disponibil aici: {movie['movie_link']}"
+                movie_match = re.search(r'trailer (pentru|la)\s+(.+)', user_input.lower())
+                if movie_match:
+                    movie_title = movie_match.group(2)
+                    movie = collections["cinemacity"].find_one({"title": {"$regex": movie_title, "$options": "i"}})
+                    if movie:
+                        response_content = f"Trailer-ul pentru filmul '{movie['title']}' poate fi găsit aici: {movie['poster_link']}"
+                    else:
+                        response_content = f"Ne pare rău, nu am găsit trailer-ul pentru filmul '{movie_title}'."
                 else:
-                    response_content = f"Ne pare rău, nu am găsit filmul '{movie_title}' în baza de date."
-            else:
-                response_content = "Te rog specifică un film pentru a obține link-ul către pagina unde s-ar putea găsi trailer-ul (de exemplu: 'trailer pentru Numele Filmului')."
-            
+                    response_content = "Te rog specifică un film pentru a obține link-ul către trailer (de exemplu: 'trailer pentru Numele Filmului')."
+       
+       
         elif re.search(r'similar', user_input.lower()):
                 movie_match = re.search(r'similar[ea]?\s+cu\s+(.+)', user_input.lower())
                 if movie_match:
@@ -1070,19 +1062,19 @@ def chat_with_mistral(request):
 
 
 
-          # Scenariul 1: Afișarea tuturor evenimentelor și anunțurilor
-        elif re.search(r'(aula|universitate|facultate|stiri|unitbv)', user_input.lower()):
-            if re.search(r'evenimente', user_input.lower()):
-              
-                events = list(collections["aulas"].find())
-                if events:
-                    event_list = "\n".join([f"- {event['title'], event['description'] } )" for event in events])
-                    response_content = f"Evenimentele și anunțurile de la Aula Universității sunt:\n{event_list}"
-                else:
-                    response_content = "Nu am găsit evenimente sau anunțuri în acest moment."
 
-        # Scenariul 2: Afișarea detaliilor unui anumit eveniment     
-        # elif re.search(r'detalii despre', user_input.lower()):
+        # elif re.search(r'(aula|universitate|facultate|stiri|unitbv)', user_input.lower()):
+        #     if re.search(r'evenimente', user_input.lower()):
+        #         # Scenariul 1: Afișarea tuturor evenimentelor și anunțurilor
+        #         events = list(collections["aulas"].find())
+        #         if events:
+        #             event_list = "\n".join([f"- {event['title']} ({event['published_date']})" for event in events])
+        #             response_content = f"Evenimentele și anunțurile de la Aula Universității sunt:\n{event_list}"
+        #         else:
+        #             response_content = "Nu am găsit evenimente sau anunțuri în acest moment."
+            
+        # elif re.search(r'detalii', user_input.lower()):
+        #         # Scenariul 2: Afișarea detaliilor unui anumit eveniment
         #         event_match = re.search(r'detalii despre\s+(.+)', user_input.lower())
         #         if event_match:
         #             event_title = event_match.group(1)
@@ -1096,25 +1088,6 @@ def chat_with_mistral(request):
         #                 response_content = f"Nu am găsit detalii despre evenimentul '{event_title}'."
         #         else:
         #             response_content = "Te rog specifică un eveniment pentru a obține detalii (de exemplu: 'detalii despre Numele Evenimentului')."
-
-
-        # Scenariul 2: Afișarea detaliilor unui anumit eveniment     
-        elif re.search(r'detalii despre', user_input.lower()):
-            event_match = re.search(r'detalii despre\s+(.+)', user_input.lower())
-            if event_match:
-                event_title = event_match.group(1)
-                event = collections["aulas"].find_one({"title": {"$regex": event_title, "$options": "i"}})
-                if event:
-                    response_content = f"Detalii despre evenimentul '{event['title']}':\n"
-                    response_content += f"- Descriere: {event['description']}\n"
-                    response_content += f"- Link: {event['article_url']}\n"
-                    response_content += f"- Imagine: {event['image_url']}\n"  
-                    response_content += f"- Data publicării: {event['published_date'].strftime('%d %B %Y')}"
-                else:
-                    response_content = f"Nu am găsit detalii despre evenimentul '{event_title}'."
-            else:
-                response_content = "Te rog specifică un eveniment pentru a obține detalii (de exemplu: 'detalii despre Numele Evenimentului')."
-
 
         # elif re.search(r'perioada', user_input.lower()):
         #         # Scenariul 4: Căutarea evenimentelor dintr-o anumită perioadă
@@ -1210,29 +1183,23 @@ def chat_with_mistral(request):
                     model=model,
                     messages=[ChatMessage(role="user", content=user_input)]
                 )
-                print(f"Răspunsul de la API-ul Mistral: {chat_response}") 
-                print(f"Structura răspunsului: {vars(chat_response)}")
-                mistral_response_content = chat_response.choices[0].message.content
-                response_content = f"Răspuns de la Mistral: {mistral_response_content}"
+                response_content = chat_response.choices[0].message.content
 
                 chat_history = ChatHistory(user_message=user_input, ai_response=response_content)
                 chat_history.save()
             except Exception as e:
-                print(f"Eroare în timpul comunicării cu API-ul Mistral: {str(e)}")  # Adăugăm această linie pentru depanare
-                response_content = f"Ne pare rău, a apărut o eroare în timpul comunicării cu API-ul Mistral: {str(e)}"
-        
-        print(user_input)
-        print(f"Răspunsul din view: {response_content}")
+                mongo_client.close()
+                return render(request, 'map/harta.html', {'error': str(e)})
 
-
+        mongo_client.close()
+        chat_history = ChatHistory.objects.all().order_by('-created_at')
         return render(request, 'map/harta.html', {'response': response_content, 'user_input': user_input})
-    return render(request, 'map/harta.html', {'response': response_content})
-
+    
+    return render(request, 'map/harta.html')
 @csrf_exempt
 def clear_chat_history(request):
     ChatHistory.objects.all().delete()
     return redirect('chat_with_mistral')
-
 
 
 

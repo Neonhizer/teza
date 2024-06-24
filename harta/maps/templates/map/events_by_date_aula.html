@@ -1,0 +1,10 @@
+{% if events %}
+    {% for event in events %}
+        <div>
+            <h3>{{ event.title }}</h3>
+            <p>{{ event.published_date }}</p>
+        </div>
+    {% endfor %}
+{% else %}
+    <p>Nu există evenimente în această dată.</p>
+{% endif %}

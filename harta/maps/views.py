@@ -33,12 +33,17 @@ import time
 import re
 from bson import json_util
 from datetime import datetime, timedelta
+from django.core.paginator import Paginator
+load_dotenv()  
 
 
 
 def get_images_centru_civic(request):
-    client = MongoClient("mongodb://localhost:27017/")
+    MONGODB_URI = os.environ.get('MONGODB_URI')
+    client = MongoClient(MONGODB_URI)
+    
     db = client["maps"]
+    
     colectie = db["CC"]
 
     imagini = list(colectie.find({}, {'_id': 0}))
@@ -51,7 +56,8 @@ def get_images_centru_civic(request):
     return JsonResponse({'imagini': imagini})
 
 def get_images_centru_vechi(request):
-    client = MongoClient("mongodb://localhost:27017/")
+    MONGODB_URI = os.environ.get('MONGODB_URI')
+    client = MongoClient(MONGODB_URI)
     db = client["maps"]
     colectie = db["CV"]
 
@@ -83,9 +89,11 @@ def streetview(request):
 def aula(request: HttpRequest):
     url = 'https://www.unitbv.ro/stiri-si-evenimente.html'
     base_url = 'https://www.unitbv.ro'
-    client = MongoClient("mongodb://localhost:27017/")
+    MONGODB_URI = os.environ.get('MONGODB_URI')
+    client = MongoClient(MONGODB_URI)
+   
     db = client["maps"]
-    news_collection = db["aulas"]
+    news_collection = db["aula"]
     search_query = request.GET.get('q', '')
 
     if search_query:
@@ -148,9 +156,11 @@ def aula(request: HttpRequest):
 @require_http_methods(["GET"])
 def events_by_date_aula(request):
     load_dotenv()
-    client = MongoClient("mongodb://localhost:27017/")
+    MONGODB_URI = os.environ.get('MONGODB_URI')
+    client = MongoClient(MONGODB_URI)
+    
     db = client["maps"]
-    news_collection = db["aulas"]
+    news_collection = db["aula"]
 
     date_str = request.GET.get('date')
     if date_str:
@@ -185,9 +195,10 @@ def events_by_date_aula(request):
 
 @require_http_methods(["GET"])
 def data_aula(request):
-    client = MongoClient("mongodb://localhost:27017/")
+    MONGODB_URI = os.environ.get('MONGODB_URI')
+    client = MongoClient(MONGODB_URI)
     db = client["maps"]
-    news_collection = db["aulas"]
+    news_collection = db["aula"]
 
     date_str = request.GET.get('date')
     if date_str:
@@ -226,24 +237,14 @@ def data_aula(request):
     client.close()
     return JsonResponse({'events': formatted_events})
 
-def extract_date_primaria(description):
-    date_patterns = [
-        r'(\d{1,2}\s*(?:–|-)\s*\d{1,2}\s+(?:ianuarie|februarie|martie|aprilie|mai|iunie|iulie|august|septembrie|octombrie|noiembrie|decembrie))',
-        r'(\d{1,2}\s+(?:ianuarie|februarie|martie|aprilie|mai|iunie|iulie|august|septembrie|octombrie|noiembrie|decembrie))',
-        r'(\d{1,2}\s+(?:ianuarie|februarie|martie|aprilie|mai|iunie|iulie|august|septembrie|octombrie|noiembrie|decembrie)\s+\d{4})'
-    ]
 
-    for pattern in date_patterns:
-        date_match = re.search(pattern, description, re.IGNORECASE)
-        if date_match:
-            return date_match.group(1)
 
-    return "Data necunoscută"
 def primaria(request: HttpRequest):
     url = 'https://cultura.brasovcity.ro/category/evenimente-culturale-ro/'
     article_data = []
     base_url = 'https://cultura.brasovcity.ro'
-    client = MongoClient("mongodb://localhost:27017/")
+    MONGODB_URI = os.environ.get('MONGODB_URI')
+    client = MongoClient(MONGODB_URI)
     db = client["maps"]
     news_collection = db["primaria"]
     response = requests.get(url, verify=False)
@@ -265,25 +266,17 @@ def primaria(request: HttpRequest):
                 description = description_element.text.strip()
                 article_url = title_element.select_one('a')['href'] if title_element.select_one('a') else None
 
-                if article_url:
-                   
-                    date = extract_date_primaria(description)
-
-                    if article_url not in existing_article_urls:
+                
+                if article_url not in existing_article_urls:
                         article_data.append({
                             'title': title,
-                            'date': date,
+                           
                             'image_url': image_url,
                             'description': description,
                             'article_url': article_url
                         })
                         existing_article_urls.add(article_url)
-                    else:
-                        # updating the date of the existing article
-                        news_collection.update_one(
-                            {'article_url': article_url},
-                            {'$set': {'date': date}}
-                        )
+                   
 
         if article_data:
             news_collection.insert_many(article_data)
@@ -293,10 +286,13 @@ def primaria(request: HttpRequest):
         articole_list = list(articole)
         return render(request, 'map/primaria.html', {'articole': articole_list})
 
+
+
 def get_all_events(request):
-    client = MongoClient("mongodb://localhost:27017/")
+    MONGODB_URI = os.environ.get('MONGODB_URI')
+    client = MongoClient(MONGODB_URI)
     db = client.maps 
-    events_collection = db.aulas 
+    events_collection = db.aula 
     primaria_collection = db.primaria  
 
     events = events_collection.find({})
@@ -319,7 +315,8 @@ def cinema_city(request):
     url = 'https://www.cinemacity.ro/#/buy-tickets-by-cinema?in-cinema=1829&at=2024-05-27&view-mode=list'
     movie_data = []
 
-    client = MongoClient("mongodb://localhost:27017/")
+    MONGODB_URI = os.environ.get('MONGODB_URI')
+    client = MongoClient(MONGODB_URI)
     db = client["maps"]
     movies_collection = db["cinemacity"]
 
@@ -412,9 +409,10 @@ def cinema_city(request):
 
 
 def events_aula(request):
-    client = MongoClient("mongodb://localhost:27017/")
+    MONGODB_URI = os.environ.get('MONGODB_URI')
+    client = MongoClient(MONGODB_URI)
     db = client["maps"]
-    aula_collection = db["aulas"] 
+    aula_collection = db["aula"] 
 
     events = aula_collection.find({})
     events_list = [{"title": event["title"], "description": event.get("description", ""), "article_url": event.get("article_url", "#"), "image_url": event.get("image_url","")} for event in events]
@@ -423,7 +421,8 @@ def events_aula(request):
     return JsonResponse({'events': events_list})
 
 def events_primaria(request):
-    client = MongoClient("mongodb://localhost:27017/")
+    MONGODB_URI = os.environ.get('MONGODB_URI')
+    client = MongoClient(MONGODB_URI)
     db = client["maps"]
     primaria_collection = db["primaria"] 
 
@@ -434,7 +433,8 @@ def events_primaria(request):
     return JsonResponse({'events': events_list})
 
 def events_teatru(request):
-    client = MongoClient("mongodb://localhost:27017/")
+    MONGODB_URI = os.environ.get('MONGODB_URI')
+    client = MongoClient(MONGODB_URI)
     db = client["maps"]
     teatru_collection = db["teatru"]
 
@@ -446,7 +446,8 @@ def events_teatru(request):
 
 
 def events_filme(request):
-    client = MongoClient("mongodb://localhost:27017/")
+    MONGODB_URI = os.environ.get('MONGODB_URI')
+    client = MongoClient(MONGODB_URI)
     db = client["maps"]
     movies_collection = db["cinemacity"]
 
@@ -476,11 +477,12 @@ def chat_with_mistral(request):
         model = "mistral-large-latest"
 
         
-        mongo_client = MongoClient("mongodb://localhost:27017/")
+        MONGODB_URI = os.environ.get('MONGODB_URI')
+        mongo_client = MongoClient(MONGODB_URI)
         db = mongo_client.maps
         collections = {
             "cinemacity": db.cinemacity,
-            "aulas": db.aulas,
+            "aula": db.aula,
             "primaria": db.primaria,
             "teatru": db.teatru
         }
@@ -526,10 +528,18 @@ def chat_with_mistral(request):
                 chat_history = ChatHistory.objects.all().order_by('-created_at')
                 movie = collections["cinemacity"].find_one({"title": {"$regex": movie_title, "$options": "i"}})
                 if movie:
-                    response_content = f"Filmul '{movie['title']}' poate fi vizionat la Cinema City. Locația Cinema City este indicată pe hartă."
-            
-                    cinema_city_coords = [45.65027328171806, 25.61105450714932] # Coordonatele corecte ale Cinema City
-                    return render(request, 'map/harta.html', {'response': response_content, 'user_input': user_input, 'cinema_city_coords': cinema_city_coords})
+                    response_content = f"Filmul '{movie['title']}' poate fi vizionat la Cinema City, Cinema One și Eliana Mall. Locațiile sunt indicate pe hartă."
+
+
+
+                    cinema_locations = {
+                    'Cinema City': [45.65027328171806, 25.61105450714932],
+                    'Cinema One': [45.67304981680509, 25.61427215362855],
+                    'Eliana Mall': [45.65766218042808, 25.56141399964052]
+                     }
+                    #cinema_city_coords = [45.65027328171806, 25.61105450714932] # Coordonatele corecte ale Cinema City
+                    return render(request, 'map/harta.html', {'response': response_content, 'user_input': user_input, 'cinema_locations': cinema_locations})
+                    # return render(request, 'map/harta.html', {'response': response_content, 'user_input': user_input, 'cinema_city_coords': cinema_city_coords})
                 else:
                     response_content = f"Ne pare rău, nu am găsit filmul '{movie_title}' în programul Cinema City."
                    
@@ -646,49 +656,141 @@ def chat_with_mistral(request):
                     response_content = "Te rog specifică un film pentru a primi recomandări similare (de exemplu: 'filme similare cu Numele Filmului')."
    
          
-#Afișarea detaliilor unui anumit eveniment
-#Detalii despre Expoziția Paula Modersohn-Becker şi colonia de artişti din Worpswede"
 
 # Afișarea tuturor evenimentelor și anunțurilor
-#Ce evenimente sunt la Aula Universității?"
+#Ce evenimente sunt la aula?"
+
+# afisarea festivalurilor
+#Ce festivaluri sunt la aula?
+
+# ce concerte sunt la aula
+# ce expozitii sunt la aula
+# ce conferinte sunt la aula 
+# ce concursuri sunt la aula
 
 
 
+        #   # Scenariul 1: Afișarea tuturor evenimentelor și anunțurilor
 
-          # Scenariul 1: Afișarea tuturor evenimentelor și anunțurilor
+
         elif re.search(r'(aula|universitate|facultate|stiri|unitbv)', user_input.lower()):
             if re.search(r'evenimente', user_input.lower()):
-              
-                events = list(collections["aulas"].find())
+                events = list(collections["aula"].find())
                 if events:
-                    event_list = "\n".join([f"- {event['title'], event['description'] } )" for event in events])
+                    event_list = "\n".join([f"- {event['title']} ({event['description']})" for event in events])
                     response_content = f"Evenimentele și anunțurile de la Aula Universității sunt:\n{event_list}"
                 else:
                     response_content = "Nu am găsit evenimente sau anunțuri în acest moment."
 
-
-
-        # Scenariul 2: Afișarea detaliilor unui anumit eveniment     
-        elif re.search(r'detalii despre', user_input.lower()):
-            event_match = re.search(r'detalii despre\s+(.+)', user_input.lower())
-            if event_match:
-                event_title = event_match.group(1)
-                event = collections["aulas"].find_one({"title": {"$regex": event_title, "$options": "i"}})
-                if event:
-                    response_content = f"Detalii despre evenimentul '{event['title']}':\n"
-                    response_content += f"- Descriere: {event['description']}\n"
-                    response_content += f"- Link: {event['article_url']}\n"
-                    response_content += f"- Imagine: {event['image_url']}\n"  
-                    response_content += f"- Data publicării: {event['published_date'].strftime('%d %B %Y')}"
+            elif re.search(r'(ce|care|cand|unde).*\bconferinte.*\b(aula|universitate)', user_input.lower()):
+                conferences = list(collections["aula"].find({"$or": [
+                    {"title": {"$regex": "conferinta|conference|congress|simpozion", "$options": "i"}},
+                    {"description": {"$regex": "conferinta|conference|congress|simpozion", "$options": "i"}}
+                ]}))
+                if conferences:
+                    conference_list = "\n".join([f"- {conference['title']} ({conference['description']})" for conference in conferences])
+                    response_content = f"Conferințele programate la Aula Universității sunt:\n{conference_list}"
                 else:
-                    response_content = f"Nu am găsit detalii despre evenimentul '{event_title}'."
-            else:
-                response_content = "Te rog specifică un eveniment pentru a obține detalii (de exemplu: 'detalii despre Numele Evenimentului')."
+                    response_content = "Nu am găsit conferințe programate la Aula Universității."
+
+            elif re.search(r'(ce|care|cand|unde).*\bexpozitii.*\b(aula|universitate)', user_input.lower()):
+                exhibitions = list(collections["aula"].find({"$or": [
+                    {"title": {"$regex": "expozitie|exhibition|expo", "$options": "i"}},
+                    {"description": {"$regex": "expozitie|exhibition|expo", "$options": "i"}}
+                ]}))
+                if exhibitions:
+                    exhibition_list = "\n".join([f"- {exhibition['title']} ({exhibition['description']})" for exhibition in exhibitions])
+                    response_content = f"Expozițiile programate la Aula Universității sunt:\n{exhibition_list}"
+                else:
+                    response_content = "Nu am găsit expoziții programate la Aula Universității."
+
+            elif re.search(r'(ce|care|cand|unde).*\bconcerte.*\b(aula|universitate)', user_input.lower()):
+                concerts = list(collections["aula"].find({"$or": [
+                    {"title": {"$regex": "concert|recital", "$options": "i"}},
+                    {"description": {"$regex": "concert|recital", "$options": "i"}}
+                ]}))
+                if concerts:
+                    concert_list = "\n".join([f"- {concert['title']} ({concert['description']})" for concert in concerts])
+                    response_content = f"Concertele programate la Aula Universității sunt:\n{concert_list}"
+                else:
+                    response_content = "Nu am găsit concerte programate la Aula Universității."
+
+
+        
+
+        ### Scenariul 5: Afișarea evenimentelor speciale (de exemplu, festivaluri, gale)
+            elif re.search(r'(ce|care|cand|unde).*\bfestival.*\b(aula|universitate)', user_input.lower()):
+                festivals = list(collections["aula"].find({"$or": [
+                    {"title": {"$regex": "festival|gala", "$options": "i"}},
+                    {"description": {"$regex": "festival|gala", "$options": "i"}}
+                ]}))
+                if festivals:
+                    festival_list = "\n".join([f"- {festival['title']} ({festival['description']})" for festival in festivals])
+                    response_content = f"Festivalurile și galele programate la Aula Universității sunt:\n{festival_list}"
+                else:
+                    response_content = "Nu am găsit festivaluri sau gale programate la Aula Universității."
+
+        ### Scenariul 6: Afișarea concursurilor și competițiilor
+            elif re.search(r'(ce|care|cand|unde).*\bconcursuri.*\b(aula|universitate)', user_input.lower()):
+                competitions = list(collections["aula"].find({"$or": [
+                    {"title": {"$regex": "concurs|competition|challenge", "$options": "i"}},
+                    {"description": {"$regex": "concurs|competition|challenge", "$options": "i"}}
+                ]}))
+                if competitions:
+                    competition_list = "\n".join([f"- {competition['title']} ({competition['description']})" for competition in competitions])
+                    response_content = f"Concursurile și competițiile programate la Aula Universității sunt:\n{competition_list}"
+                else:
+                    response_content = "Nu am găsit concursuri sau competiții programate la Aula Universității."
+
+
+        elif re.search(r'(ce|care|cand|unde).*\bevenimente.*\bprimarie', user_input.lower()):
+                events = list(collections["primaria"].find({}))
+                if events:
+                    event_list = "\n".join([f"- {event['title']} ({event['description']})" for event in events])
+                    response_content = f"Evenimentele programate la Primărie sunt:\n{event_list}"
+                else:
+                    response_content = "Nu am găsit evenimente programate la Primărie."
 
 
 
 
+        elif re.search(r'(ce piese (sunt|există) de|piese (de|lui)) ([A-Za-z\s]+)', user_input.lower()):
+                author_match = re.search(r'(ce piese (sunt|există) de|piese (de|lui)) ([A-Za-z\s]+)', user_input.lower())
+                if author_match:
+                    author = author_match.group(4).strip().title()
+                    theater_plays = list(collections["teatru"].find({"author": {"$regex": author, "$options": "i"}}))
+                    if theater_plays:
+                        play_recommendations = [f"- {play['title']} ({play['date_time']})" for play in theater_plays]
+                        response_content = f"Iată piesele de teatru de {author} din baza noastră de date:\n" + "\n".join(play_recommendations)
+                    else:
+                        response_content = f"Ne pare rău, nu am găsit piese de teatru de {author} în baza noastră de date."
+                    
 
+
+
+
+        elif re.search(r'(ce piese (sunt|există) (în|in) luna|piese din luna|arată-mi piesele din) ([a-zA-Z]+|\d{1,2})', user_input.lower()):
+            month_match = re.search(r'([a-zA-Z]+|\d{1,2})$', user_input.lower())
+            if month_match:
+                month = month_match.group(1)
+                if month.isdigit():
+                    month_num = int(month)
+                else:
+                    month_dict = {'ianuarie': 1, 'februarie': 2, 'martie': 3, 'aprilie': 4, 'mai': 5, 'iunie': 6,
+                                'iulie': 7, 'august': 8, 'septembrie': 9, 'octombrie': 10, 'noiembrie': 11, 'decembrie': 12}
+                    month_num = month_dict.get(month.lower())
+                
+                if month_num:
+                    month_regex = f"{month_num:02d}\."
+                    theater_plays = list(collections["teatru"].find({"date_time": {"$regex": month_regex}}))
+                    if theater_plays:
+                        play_recommendations = [f"- {play['title']} de {play['author']} ({play['date_time']})" for play in theater_plays]
+                        response_content = f"Iată piesele de teatru programate în luna {month}:\n" + "\n".join(play_recommendations)
+                    else:
+                        response_content = f"Ne pare rău, nu am găsit piese de teatru programate în luna {month}."
+                else:
+                    response_content = "Nu am putut identifica luna specificată. Te rog să încerci din nou."
+        
         # Integrates the Mistral API for queries not covered by the database
         else:
             try:
@@ -726,9 +828,10 @@ def clear_chat_history(request):
 
 @require_http_methods(["GET"])
 def events_by_date_teatru(request):
-    client = MongoClient("mongodb://localhost:27017/")
+    MONGODB_URI = os.environ.get('MONGODB_URI')
+    client = MongoClient(MONGODB_URI)
     db = client["maps"]
-    news_collection = db["teatru999"]
+    news_collection = db["teatru"]
 
     date_str = request.GET.get('date')
     if date_str:
@@ -791,6 +894,9 @@ def format_date(date_str):
         return "Indisponibil"
 
 
+
+
+
 def teatru(request):
     url = 'https://teatrulsicaalexandrescu.ro/program-5/'
 
@@ -802,12 +908,8 @@ def teatru(request):
         return render(request, 'map/teatru.html', {'error': 'Eroare la încărcarea paginii web.'})
 
     soup = BeautifulSoup(response.content, 'html.parser')
-
-    # select all the divs that contain the shows information
     show_sections = soup.select('div#gridrow-prg')
-
-    shows_data = []
-
+    new_shows_data = []
     for section in show_sections:
         
         
@@ -835,22 +937,35 @@ def teatru(request):
             'image_url': image_url,
             'date_time': date_time,
         }
-        shows_data.append(show_data)
-
-        # Update the "teatru" collection with the "datanoua" field
         datanoua = extract_date(date_time)
         formatted_date = format_date(datanoua)
         show_data['datanoua'] = formatted_date
+        new_shows_data.append(show_data)
 
     try:
-        client = MongoClient("mongodb://localhost:27017/")
+        MONGODB_URI = os.environ.get('MONGODB_URI')
+        client = MongoClient(MONGODB_URI)
         db = client["maps"]
-        shows_collection = db["teatru999"]
+        shows_collection = db["teatru"]
 
-        # delete all existing data from the collection
-        shows_collection.delete_many({})
-        # Insert data into MongoDB
-        shows_collection.insert_many(shows_data)  
+        # Obține spectacolele existente
+        existing_shows = list(shows_collection.find())
+
+        # Adaugă noile spectacole
+        for show in new_shows_data:
+            shows_collection.update_one(
+                {'title': show['title'], 'date_time': show['date_time']},
+                {'$set': show},
+                upsert=True
+            )
+
+        # Obține toate spectacolele actualizate
+        all_shows = list(shows_collection.find().sort('datanoua', -1))
+
+        # Paginare
+        paginator = Paginator(all_shows, 10)  # 10 spectacole per pagină
+        page_number = request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
 
     except Exception as e:
         logging.error(f"Error connecting to or updating MongoDB: {e}")
@@ -858,15 +973,15 @@ def teatru(request):
     finally:
         client.close()
 
-    # Pass the list of all shows data to the template
-    return render(request, 'map/teatru.html', {'shows': shows_data})
+    return render(request, 'map/teatru.html', {'page_obj': page_obj})
 
 
 @require_http_methods(["GET"])
 def data_teatru(request):
-    client = MongoClient("mongodb://localhost:27017/")
+    MONGODB_URI = os.environ.get('MONGODB_URI')
+    client = MongoClient(MONGODB_URI)
     db = client["maps"]
-    news_collection = db["teatru999"]
+    news_collection = db["teatru"]
 
     date_str = request.GET.get('date')
     if date_str:
@@ -909,8 +1024,260 @@ def data_teatru(request):
 
 
 
-def cinema_city_coord(request):
+# def cinema_city_coord(request):
     
-    cinema_city_coords = [45.65027328171806, 25.61105450714932] 
-    return render(request, 'harta.html', {'cinema_city_coords': cinema_city_coords})
+#     cinema_city_coords = [45.65027328171806, 25.61105450714932] 
+#     return render(request, 'harta.html', {'cinema_city_coords': cinema_city_coords})
 
+def cinema_locations(request):
+    cinema_locations = {
+        'Cinema City': [45.65027328171806, 25.61105450714932],
+        'Cinema One': [45.67304981680509, 25.61427215362855],
+        'Eliana Mall': [45.65766218042808, 25.56141399964052]
+    }
+    return render(request, 'map/harta.html', {'cinema_locations': cinema_locations})
+
+
+
+
+def aula_scheduler():
+    url = 'https://www.unitbv.ro/stiri-si-evenimente.html'
+    base_url = 'https://www.unitbv.ro'
+    MONGODB_URI = os.environ.get('MONGODB_URI')
+    client = MongoClient(MONGODB_URI)
+   
+    db = client["maps"]
+    news_collection = db["aula"]
+
+    response = requests.get(url)
+    if response.status_code == 200:
+        soup = BeautifulSoup(response.text, 'html.parser')
+        articles = soup.find_all('article', class_='item')
+
+        for article in articles:
+            title_element = article.find('h5', class_='item_title')
+            description_element = article.find('div', class_='item_introtext')
+            image_element = article.find('img')
+            if title_element and description_element and image_element:
+                title = title_element.text.strip()
+                description = description_element.text.strip()
+                image_url = urljoin(base_url, image_element['src'])
+                article_url = urljoin(base_url, article.find('a')['href'])
+                existing_article = news_collection.find_one({'article_url': article_url})
+                if image_url and not existing_article:
+                    published_date = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+                    article_data = {
+                        'title': title,
+                        'article_url': article_url,
+                        'image_url': image_url,
+                        'description': description,
+                        'published_date': published_date,
+                    }
+                    try:
+                        news_collection.insert_one(article_data)
+                    except Exception as e:
+                        print(f"Eroare la inserarea datelor: {str(e)}")
+
+    client.close()
+
+
+
+def primaria_scheduler():
+    url = 'https://cultura.brasovcity.ro/category/evenimente-culturale-ro/'
+    article_data = []
+    base_url = 'https://cultura.brasovcity.ro'
+    MONGODB_URI = os.environ.get('MONGODB_URI')
+    client = MongoClient(MONGODB_URI)
+    db = client["maps"]
+    news_collection = db["primaria"]
+    response = requests.get(url, verify=False)
+
+    if response.status_code == 200:
+        soup = BeautifulSoup(response.text, 'html.parser')
+        articles = soup.select('article.post')
+
+        existing_article_urls = set(news_collection.distinct('article_url'))
+
+        for article in articles:
+            title_element = article.select_one('h1.entry-title')
+            image_element = article.select_one('img.thumbnail')
+            description_element = article.select_one('div.entry-summary')
+
+            if title_element and image_element and description_element:
+                title = title_element.text.strip()
+                image_url = urljoin(base_url, image_element['src'])
+                description = description_element.text.strip()
+                article_url = title_element.select_one('a')['href'] if title_element.select_one('a') else None
+
+                if article_url not in existing_article_urls:
+                    article_data.append({
+                        'title': title,
+                        'image_url': image_url,
+                        'description': description,
+                        'article_url': article_url
+                    })
+                    existing_article_urls.add(article_url)
+
+        if article_data:
+            news_collection.insert_many(article_data)
+
+    client.close()
+
+
+
+
+def cinema_city_scheduler():
+    url = 'https://www.cinemacity.ro/#/buy-tickets-by-cinema?in-cinema=1829&at=2024-05-27&view-mode=list'
+    movie_data = []
+
+    MONGODB_URI = os.environ.get('MONGODB_URI')
+    client = MongoClient(MONGODB_URI)
+    db = client["maps"]
+    movies_collection = db["cinemacity"]
+
+    # configure options for Chrome
+    chrome_options = Options()
+    chrome_options.add_argument("--headless")
+    chrome_options.add_argument("--no-sandbox")
+    chrome_options.add_argument("--disable-dev-shm-usage")
+    chrome_options.add_argument("--window-size=1920,1080")
+
+    service = Service('C:/Users/rusuv/Desktop/chromedriver-win64/chromedriver.exe')
+    driver = webdriver.Chrome(service=service, options=chrome_options)
+    wait = WebDriverWait(driver, 20)
+
+    try:
+        driver.get(url)
+        time.sleep(10)  # Wait for the initial page load
+
+        # Wait until the movie containers are present
+        wait.until(EC.presence_of_all_elements_located((By.CSS_SELECTOR, 'div.row.qb-movie')))
+
+        # Get the page source HTML
+        html_source = driver.page_source
+
+        # Parse the HTML using BeautifulSoup
+        soup = BeautifulSoup(html_source, 'html.parser')
+        movie_containers = soup.find_all('div', class_='row qb-movie')
+
+        for movie_container in movie_containers:
+            # Extract the movie title and link
+            title_link_element = movie_container.find('a', class_='qb-movie-link')
+            title = title_link_element.find('h3').text.strip() if title_link_element else "Titlu indisponibil"
+            movie_link = title_link_element['href'] if title_link_element else None
+
+            # movie description
+            description_element = movie_container.find('div', class_='qb-movie-info-wrapper')
+            description_text = description_element.find('div', class_='pt-xs').text.strip() if description_element else "Descriere indisponibilă"
+            genres, duration = (description_text.split('|') + [""])[:2]
+            description = f"{genres.strip()} - {duration.strip()}"
+
+            # link to the poster image
+            poster_link = movie_container.find('div', class_='movie-poster-container')
+            if poster_link:
+                poster_img = poster_link.find('img')
+                if poster_img:
+                    poster_link = poster_img.get('data-src') or poster_img.get('src')
+                else:
+                    poster_link = None
+            else:
+                poster_link = None
+
+            print(poster_link)
+            
+            showtime_elements = movie_container.find_all('a', class_='btn btn-primary btn-lg')
+            showtimes = [showtime_element.text.strip() for showtime_element in showtime_elements]
+
+           
+            movie_data.append({
+                'title': title,
+                'description': description,
+                'poster_link': poster_link,
+                'showtimes': showtimes,
+                'movie_link': movie_link
+            })
+
+            # Insert/update data in MongoDB
+            movies_collection.update_one(
+                {'title': title},
+                {'$set': {
+                    'title': title,
+                    'description': description,
+                    'poster_link': poster_link,
+                    'showtimes': showtimes,
+                    'movie_link': movie_link
+                }},
+                upsert=True
+            )
+
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
+    finally:
+        driver.quit()
+        client.close()
+
+    print(f"Updated {len(movie_data)} movies in the database.")
+
+
+
+
+def teatru_scheduler():
+    url = 'https://teatrulsicaalexandrescu.ro/program-5/'
+
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+    except requests.exceptions.RequestException as e:
+        logging.error(f"Error fetching webpage: {e}")
+        return
+
+    soup = BeautifulSoup(response.content, 'html.parser')
+    show_sections = soup.select('div#gridrow-prg')
+    new_shows_data = []
+    for section in show_sections:
+        date_time_element = section.select_one('section.av_textblock_section div p')
+        date_time = date_time_element.get_text(separator=" ").strip() if date_time_element else "Data/ora indisponibilă"
+        
+        title_link_element = section.select_one('section.av_textblock_section div p a')
+        title = title_link_element.text.strip() if title_link_element else "Titlu indisponibil"
+        title_link = title_link_element['href'] if title_link_element and title_link_element.has_attr('href') else None
+        
+        author_element = section.select_one('section.av_textblock_section div p:nth-of-type(2)')
+        author = author_element.text.strip() if author_element else "Autor indisponibil"
+
+        image_element = section.select_one('div.avia-image-container-inner img')
+        image_url = image_element['src'] if image_element else "Imagine indisponibilă"
+
+        show_data = {
+            'title': title,
+            'title_link': title_link,
+            'author': author,
+            'image_url': image_url,
+            'date_time': date_time,
+        }
+        datanoua = extract_date(date_time)
+        formatted_date = format_date(datanoua)
+        show_data['datanoua'] = formatted_date
+        new_shows_data.append(show_data)
+
+    try:
+        MONGODB_URI = os.environ.get('MONGODB_URI')
+        client = MongoClient(MONGODB_URI)
+        db = client["maps"]
+        shows_collection = db["teatru"]
+
+        # Adaugă noile spectacole
+        for show in new_shows_data:
+            shows_collection.update_one(
+                {'title': show['title'], 'date_time': show['date_time']},
+                {'$set': show},
+                upsert=True
+            )
+
+        logging.info(f"Updated {len(new_shows_data)} shows in the database.")
+
+    except Exception as e:
+        logging.error(f"Error connecting to or updating MongoDB: {e}")
+    finally:
+        client.close()

@@ -81,6 +81,45 @@
             text-decoration: none;
             border-radius: 3px;
         }
+
+
+
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 30px;
+        }
+
+        .pagination a, .pagination span {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 40px;
+            height: 40px;
+            margin: 0 5px;
+            border-radius: 50%;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+
+        .pagination a:hover {
+            background-color: #0056b3;
+            transform: scale(1.1);
+        }
+
+        .pagination .current {
+            background-color: #0056b3;
+        }
+
+        .pagination .dots {
+            background-color: transparent;
+            color: #007bff;
+        }
     </style>
 </head>
 <body>
@@ -89,7 +128,7 @@
             <a href="http://127.0.0.1:8000/harta" class="home-button">Acasă</a>
             <h1>Spectacole de Teatru</h1>
         </div>
-        {% for show in shows %}
+        {% for show in page_obj %}
         <div class="show">
             <img src="{{ show.image_url }}" alt="{{ show.title }}">
             <div class="show-details">
@@ -100,6 +139,26 @@
             </div>
         </div>
         {% endfor %}
+
+        <div class="pagination">
+            {% if page_obj.has_previous %}
+                <a href="?page=1">&laquo;</a>
+            {% endif %}
+
+            {% for i in page_obj.paginator.page_range %}
+                {% if page_obj.number == i %}
+                    <span class="current">{{ i }}</span>
+                {% elif i > page_obj.number|add:'-3' and i < page_obj.number|add:'3' %}
+                    <a href="?page={{ i }}">{{ i }}</a>
+                {% elif i == page_obj.number|add:'-3' or i == page_obj.number|add:'3' %}
+                    <span class="dots">...</span>
+                {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.paginator.num_pages }}">&raquo;</a>
+            {% endif %}
+        </div>
     </div>
 </body>
 </html>

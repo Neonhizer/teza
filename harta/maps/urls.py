@@ -14,10 +14,11 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path('harta', views.harta, name='harta'),
+   path('harta', views.harta, name='harta'),
     path('get_images_centru_civic/', views.get_images_centru_civic, name='get_images_centru_civic'),
     path('get_images_centru_vechi/', views.get_images_centru_vechi, name='get_images_centru_vechi'),
     path('aula/', views.aula, name='aula'),
+    
     path('street/', views.streetview, name ='street' ),
     path('get_all_events/', views.get_all_events, name='get_all_events'),
     path('primaria/',views.primaria, name ='primaria'),

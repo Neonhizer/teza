@@ -12,6 +12,10 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 
 from pathlib import Path
 from pymongo import MongoClient
+import os
+from dotenv import load_dotenv
+MONGODB_URI = os.environ.get('MONGODB_URI')
+load_dotenv()  # Încarcă variabilele din fișierul .env
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -41,6 +45,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'maps',
     'rest_framework',
+   
+    
 
 ]
 
@@ -86,7 +92,8 @@ WSGI_APPLICATION = 'harta.wsgi.application'
 MONGODB_DATABASES = [
     {
         'NAME': 'maps',  
-        'HOST': 'localhost',  
+        # 'HOST': 'mongodb+srv://admin:<admin>@cluster0.jbb9s9t.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0',  
+       "HOST":  MONGODB_URI,
         'PORT': 27017, 
    
         'ALIAS': 'default',  
@@ -103,15 +110,28 @@ def get_mongodb(alias='default'):
     return db
 
 
-# Configuration to use PyMongo for performing migrations in Django
+# # Configuration to use PyMongo for performing migrations in Django
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'djongo',
+#         'NAME': 'maps',  
+#         'ENFORCE_SCHEMA': False,
+#     },
+# }
+
+
+
+
+
 DATABASES = {
     'default': {
         'ENGINE': 'djongo',
-        'NAME': 'maps',  
-        'ENFORCE_SCHEMA': False,
-    },
+        'NAME': 'maps',  # sau numele bazei tale de date
+        'CLIENT': {
+            'host': MONGODB_URI,
+        }
+    }
 }
-
 
 
 
@@ -181,3 +201,6 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
     ]
 }
+
+
+SCHEDULER_AUTOSTART = True

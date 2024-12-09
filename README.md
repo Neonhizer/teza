@@ -4,4 +4,5 @@
 
 ## Overview al aplicației
 
-![Overview aplicație](another/overview.jpg)
+![Overview aplicație](another/overview.png)
+

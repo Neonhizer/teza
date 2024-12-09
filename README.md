@@ -68,8 +68,8 @@ Poți vedea ce evenimente vor avea loc și când, totodată și în trecut.
 - **Analiza și recomandări personalizate**:
   Monitorizarea interacțiunilor utilizatorilor cu aplicația și furnizarea recomandărilor personalizate de evenimente pe baza preferințelor și istoricului de vizualizare.
 
-  ## Demo al Aplicației
+## Demo al Aplicației
 
 Pentru a vedea demonstrația aplicației, accesează video-ul de mai jos:
 
-[![Demo al aplicației](https://via.placeholder.com/800x400?text=Demo+Video)](another/demo.mkv)
+[![Demo al aplicației](https://img.youtube.com/vi/e6zOCkoPpS0/maxresdefault.jpg)](https://www.youtube.com/watch?v=e6zOCkoPpS0)
